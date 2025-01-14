@@ -5,10 +5,12 @@
 package frc.robot.SwerveSubsystems;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public class DriveSubsystem extends SubsystemBase {
   public SwerveDriveModule blMotor = new SwerveDriveModule(Constants.backLeftModuleDriveCANID, Constants.backLeftModuleRotateCANID, Constants.backLeftModuleEncoderCANID, 0.3686);
@@ -18,13 +20,12 @@ public class DriveSubsystem extends SubsystemBase {
   public double setAngle;
 
   
-  public SwerveModulePosition[] getPositions()
-  {
-    return new SwerveModulePosition[] {
-    flMotor.getMotorEncoderPosition(), frMotor.getMotorEncoderPosition(),
-    blMotor.getMotorEncoderPosition(), brMotor.getMotorEncoderPosition()
-  };
-  }
+  // public SwerveModulePosition[] getPositions() {
+  //   return new SwerveModulePosition[] {
+  //   flMotor.getMotorEncoderPosition(), frMotor.getMotorEncoderPosition(),
+  //   blMotor.getMotorEncoderPosition(), brMotor.getMotorEncoderPosition()
+  //   };
+  // }
 
   // PIDController flPID = new PIDController(0.63, 0, 0);
   // PIDController frPID = new PIDController(0.63, 0, 0);
@@ -154,4 +155,12 @@ public class DriveSubsystem extends SubsystemBase {
   public void rotateTo(double radians) {
     
   }
+
+  public void setWheelStates(SwerveModuleState[] states) {
+      flMotor.directionalDrive(states[0].speedMetersPerSecond, states[0].angle.getRadians());
+      frMotor.directionalDrive(states[1].speedMetersPerSecond, states[1].angle.getRadians());
+      blMotor.directionalDrive(states[2].speedMetersPerSecond, states[2].angle.getRadians());
+      brMotor.directionalDrive(states[3].speedMetersPerSecond, states[3].angle.getRadians());
+  }
+  ;
 }

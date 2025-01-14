@@ -54,7 +54,7 @@ public class NavigationSubsystem extends SubsystemBase {
 //   public OdometrySubsystem odomSub;
 
   /** Creates a new NavigationSubsystem. */
-  public NavigationSubsystem(Supplier<SwerveModulePosition[]> modulePositions) {
+  public NavigationSubsystem() {
     this.modulePositions = modulePositions;
 
     Shuffleboard.getTab("Navigation").addDoubleArray("Displacement", () -> {

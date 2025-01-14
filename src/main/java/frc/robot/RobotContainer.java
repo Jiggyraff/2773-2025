@@ -38,7 +38,7 @@ public class RobotContainer {
   // Subsystems
   DriveSubsystem driveSubsystem = new DriveSubsystem();
   // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  NavigationSubsystem navigationSubsystem = new NavigationSubsystem(driveSubsystem::getPositions);
+  NavigationSubsystem navigationSubsystem = new NavigationSubsystem();
   // ArmSubsystem armSubsystem = new ArmSubsystem();
   // ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   // ClimbSubsystem climbSubsystem = new ClimbSubsystem(armStick);
@@ -47,7 +47,7 @@ public class RobotContainer {
 
   // Commands from files
     //Drive Commands
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, armStick, navigationSubsystem);
+  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, navigationSubsystem);
 
   //Buttons
     //driveStick

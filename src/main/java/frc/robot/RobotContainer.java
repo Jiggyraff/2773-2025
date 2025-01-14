@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.SwerveSubsystems.KinematicsSubsystem;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -25,6 +24,9 @@ import frc.robot.Information.*;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+  public RobotContainer() {
+    configureBindings();
+  }
   //Auto chooser for Robot.java
   public Command getAutonomousCommand() {
     return null;
@@ -36,7 +38,7 @@ public class RobotContainer {
   // Subsystems
   DriveSubsystem driveSubsystem = new DriveSubsystem();
   // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  NavigationSubsystem navigationSubsystem = new NavigationSubsystem(driveSubsystem::getPositions);
+  NavigationSubsystem navigationSubsystem = new NavigationSubsystem();
   // ArmSubsystem armSubsystem = new ArmSubsystem();
   // ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   // ClimbSubsystem climbSubsystem = new ClimbSubsystem(armStick);
@@ -45,7 +47,7 @@ public class RobotContainer {
 
   // Commands from files
     //Drive Commands
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, armStick, navigationSubsystem);
+  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, navigationSubsystem);
 
   //Buttons
     //driveStick
@@ -66,5 +68,7 @@ public class RobotContainer {
     POVButton dpadLeftButton = new POVButton(armStick, -90);
     POVButton dpadUpButton = new POVButton(armStick, 180);
   
-  //Instant Commands
+  private void configureBindings() {
+    driveSubsystem.setDefaultCommand(driveCommand);
+  }
 }

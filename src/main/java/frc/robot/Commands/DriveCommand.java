@@ -18,26 +18,14 @@ import frc.robot.Constants;
 public class DriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
   private final XboxController joy;
-  private final NavigationSubsystem navigationSubsystem;
+  private final KinematicsSubsystem kinematicsSubsystem;
 
   /** Creates a new DriveCommand. */
-  public DriveCommand(DriveSubsystem driveSubsystem, XboxController joy, NavigationSubsystem navigationSubsystem) {
+  public DriveCommand(DriveSubsystem driveSubsystem, XboxController joy, KinematicsSubsystem kinematicsSubsystem) {
     this.driveSubsystem = driveSubsystem;
     this.joy = joy;
-    this.navigationSubsystem = navigationSubsystem;
-    addRequirements(driveSubsystem);
-    Shuffleboard.getTab("Navigation").addDoubleArray("flState", () -> {
-      return new double[] { states[0].speedMetersPerSecond, states[0].angle.getRadians() };
-    });
-    Shuffleboard.getTab("Navigation").addDoubleArray("frState", () -> {
-      return new double[] { states[0].speedMetersPerSecond, states[1].angle.getRadians() };
-    });
-    Shuffleboard.getTab("Navigation").addDoubleArray("blState", () -> {
-      return new double[] { states[0].speedMetersPerSecond, states[2].angle.getRadians() };
-    });
-    Shuffleboard.getTab("Navigation").addDoubleArray("brState", () -> {
-      return new double[] { states[0].speedMetersPerSecond, states[3].angle.getRadians() };
-    });
+    this.kinematicsSubsystem = kinematicsSubsystem;
+    addRequirements(driveSubsystem, kinematicsSubsystem);
   }
 
   // Called when the command is initially scheduled.
@@ -62,11 +50,11 @@ public class DriveCommand extends Command {
     double x = joy.getLeftX(), y = joy.getLeftY(), r = joy.getRightX();
     double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
     double angle = Math.atan2(y, x);
-    double gyroAngle = navigationSubsystem.angle();
+    double gyroAngle = kinematicsSubsystem.gyroAngle();
     
-    SwerveDriveKinematics kinematics = new SwerveDriveKinematics(modulePos);
-    states = kinematics.toSwerveModuleStates(new ChassisSpeeds(x, y, r), new Translation2d());
-    kinematics.desaturateWheelSpeeds(states, Constants.maxWheelSpeed);
+    SwerveModuleState[] states = kinematicsSubsystem.toSwerveModuleState(new ChassisSpeeds(x, y, r), new Translation2d());
+    kinematicsSubsystem.kinematics.desaturateWheelSpeeds(states, Constants.maxWheelSpeed);
+    kinematicsSubsystem.setModulePos(states);
 
 
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {

@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.kinematics.Kinematics;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -39,15 +40,11 @@ public class RobotContainer {
   DriveSubsystem driveSubsystem = new DriveSubsystem();
   // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   NavigationSubsystem navigationSubsystem = new NavigationSubsystem();
-  // ArmSubsystem armSubsystem = new ArmSubsystem();
-  // ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  // ClimbSubsystem climbSubsystem = new ClimbSubsystem(armStick);
-  // OdometrySubsystem odometrySubsystem = new OdometrySubsystem(navigationSubsystem);
-  // TagSubsystem tagSubsystem = new TagSubsystem(odometrySubsystem);
+  KinematicsSubsystem kinematicsSubsystem = new KinematicsSubsystem(driveSubsystem);
 
   // Commands from files
     //Drive Commands
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, navigationSubsystem);
+  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, kinematicsSubsystem);
 
   //Buttons
     //driveStick

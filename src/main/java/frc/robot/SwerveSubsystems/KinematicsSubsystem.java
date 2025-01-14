@@ -12,22 +12,30 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.Constants;
 
 public class KinematicsSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
   public KinematicsSubsystem(DriveSubsystem driveSubsystem) {
-    this.driveSubsystem = driveSubsystem;
+    Shuffleboard.getTab("Navigation").addDoubleArray("flState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[0].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("frState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[1].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("blState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[2].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("brState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[3].angle.getRadians() };
+    });
   }
 
-<<<<<<< HEAD
   DriveSubsystem driveSubsystem;
 
-  AHRS gyro = new AHRS(hu);
   double gyroAngle;
-=======
   AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
->>>>>>> a2746bd63a6a71fb2e0bb90dd43ff8d3c065b41a
   
   
   //Whenever swerve modules are passed by a function, they will be in this order:
@@ -45,7 +53,7 @@ public class KinematicsSubsystem extends SubsystemBase {
     new SwerveModuleState(),
     new SwerveModuleState()};
 
-  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(trans);
+  public SwerveDriveKinematics kinematics = new SwerveDriveKinematics(trans);
 
   SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, new Rotation2d(gyro.getYaw()), stateToPositions(states));
   Pose2d pose;
@@ -65,5 +73,17 @@ public class KinematicsSubsystem extends SubsystemBase {
       new SwerveModulePosition(states[3].speedMetersPerSecond, states[3].angle)
     };
     return pos;
+  }
+
+  public double gyroAngle() {
+    return gyroAngle;
+  }
+
+  public SwerveModuleState[] toSwerveModuleState(ChassisSpeeds chassisSpeeds, Translation2d translation2d) {
+    return kinematics.toSwerveModuleStates(chassisSpeeds, translation2d);
+  }
+
+  public void setModulePos(SwerveModuleState[] states) {
+    this.states = states;
   }
 }

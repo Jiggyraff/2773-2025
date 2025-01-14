@@ -3,7 +3,9 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.SwerveSubsystems;
-import com.kauailabs.navx.frc.AHRS;
+
+import com.studica.frc.*;
+import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -14,7 +16,7 @@ public class KinematicsSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
   public KinematicsSubsystem() {}
 
-  AHRS gyro = new AHRS();
+  AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
   
   
   //Whenever swerve modules are passed by a function, they will be in this order:

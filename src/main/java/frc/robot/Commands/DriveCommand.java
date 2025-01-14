@@ -29,6 +29,7 @@ public class DriveCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -39,6 +40,8 @@ public class DriveCommand extends Command {
     double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
     double angle = Math.atan2(y, x);
     double gyroAngle = navigationSubsystem.angle();
+
+
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {
        double rotate = joy.getRightX();
        if (Math.abs(rotate) > Deadzone) {

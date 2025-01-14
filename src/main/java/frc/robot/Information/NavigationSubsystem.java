@@ -6,7 +6,8 @@ package frc.robot.Information;
 
 import java.util.function.Supplier;
 
-import com.kauailabs.navx.frc.AHRS;
+import com.studica.frc.*;
+import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,7 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class NavigationSubsystem extends SubsystemBase {
-  public AHRS gyro = new AHRS(SPI.Port.kMXP);
+  public AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
   public double angle;
   // Locations for the swerve drive modules relative to the robot center.
   Translation2d frontLeftLocation = new Translation2d(-Constants.DistanceBetweenWheels / 2,
@@ -62,6 +63,7 @@ public class NavigationSubsystem extends SubsystemBase {
     Shuffleboard.getTab("Navigation").addDoubleArray("Rotation", () -> {
       return new double[] { angle };
     });
+
     // odometry = new SwerveDriveOdometry(
     //     kinematics, gyro.getRotation2d(), modulePositions.get(), new Pose2d(0.0, 0.0, new Rotation2d()));
     gyro.reset();
@@ -81,7 +83,7 @@ public class NavigationSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
+    angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
     // pose = odometry.update(gyro.getRotation2d(), modulePositions.get());
     // x = pose.getY();
     // y = -pose.getX();

@@ -33,13 +33,23 @@ public class SwerveDriveModule {
     rotateMotor = new SparkMax(rotateId, frc.robot.Constants.motorType);
     encoder = new CANcoder(encoderId);
     distanceEncoder = driveMotor.getEncoder();
-    //distanceEncoder.setPositionConversionFactor((1/6.75) * 2 * Math.PI * 4 * 0.0254);
     rotationEncoder = rotateMotor.getEncoder();
-    //rotationEncoder.setPositionConversionFactor((1.0/21) * 2 * Math.PI);
     rotationEncoder.setPosition(position());
     id = encoderId;
     this.alpha = alpha;
-    this.pidRotate = new PIDController(0.63, 0, 0);
+    this.pidRotate = new PIDController(0.30, 0, 0);
+    distanceEncoder.setPosition(0);
+  }
+
+  public double angleAdjustedRadians() {
+    double rawAngle = encoder.getPosition().getValueAsDouble() * 2 * Math.PI;
+    while (rawAngle > Math.PI) {
+      rawAngle -= (2 * Math.PI);
+    }
+    while (rawAngle < -Math.PI) {
+      rawAngle += (2 * Math.PI);
+    }
+    return rawAngle;
   }
 
   public double distanceEncoderPosition() {
@@ -96,6 +106,10 @@ public class SwerveDriveModule {
     return value * 2 * Math.PI;
   }
 
+  public double totalDistanceTraveled() {
+    return distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254;
+  }
+
   public double rawPosition() {
     return encoder.getAbsolutePosition().getValueAsDouble();
   }
@@ -110,5 +124,9 @@ public class SwerveDriveModule {
   public void stop() {
     driveMotor.stopMotor();
     rotateMotor.stopMotor();
+  }
+
+  public void setPIDValues(double p, double i, double d) {
+    pidRotate.setPID(p, i, d);
   }
 }

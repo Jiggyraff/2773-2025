@@ -39,7 +39,7 @@ public class DriveCommand extends Command {
     double x = joy.getLeftX(), y = joy.getLeftY();
     double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
     double angle = Math.atan2(y, x);
-    double gyroAngle = navigationSubsystem.angle();
+    double gyroAngle = navigationSubsystem.getAdjustedAngle();
 
 
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {

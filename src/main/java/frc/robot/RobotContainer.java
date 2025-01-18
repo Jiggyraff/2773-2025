@@ -36,19 +36,20 @@ public class RobotContainer {
   XboxController armStick = new XboxController(1);
 
   // Subsystems
-  DriveSubsystem driveSubsystem = new DriveSubsystem();
+  NavigationSubsystem navSub = new NavigationSubsystem();
+  DriveSubsystem driveSubsystem = new DriveSubsystem(navSub);
   // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  NavigationSubsystem navigationSubsystem = new NavigationSubsystem(driveSubsystem::getPositions);
   // ArmSubsystem armSubsystem = new ArmSubsystem();
   // ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   // ClimbSubsystem climbSubsystem = new ClimbSubsystem(armStick);
   // OdometrySubsystem odometrySubsystem = new OdometrySubsystem(navigationSubsystem);
-  // TagSubsystem tagSubsystem = new TagSubsystem(odometrySubsystem);
+  TagSubsystem tagSubsystem = new TagSubsystem();
 
   // Commands from files
     //Drive Commands
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, armStick, navigationSubsystem);
-
+  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, armStick, navSub);
+  PDownCommand PDownCommand = new PDownCommand(driveSubsystem);
+  
   //Buttons
     //driveStick
   JoystickButton turnToTagButton = new JoystickButton(driveStick, 2);
@@ -67,6 +68,8 @@ public class RobotContainer {
     POVButton dpadRightButton = new POVButton(armStick, 90);
     POVButton dpadLeftButton = new POVButton(armStick, -90);
     POVButton dpadUpButton = new POVButton(armStick, 180);
+
+    
   
   private void configureBindings() {
     driveSubsystem.setDefaultCommand(driveCommand);

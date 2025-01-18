@@ -41,6 +41,18 @@ public class DriveSubsystem extends SubsystemBase {
     Shuffleboard.getTab("Navigation").addDoubleArray("Set Angle gilcswdicqewe", () -> {
       return new double[] {setAngle};
     });
+    Shuffleboard.getTab("Navigation").addDoubleArray("flMotor", () -> {
+      return new double[] { flMotor.encoder.getPosition().getValueAsDouble(), flMotor.distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254 };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("frMotor", () -> {
+      return new double[] { frMotor.encoder.getPosition().getValueAsDouble(), frMotor.distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254 };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("blMotor", () -> {
+      return new double[] { blMotor.encoder.getPosition().getValueAsDouble(), blMotor.distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254 };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("brMotor", () -> {
+      return new double[] { brMotor.encoder.getPosition().getValueAsDouble(), brMotor.distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254 };
+    });
   }
 
   @Override

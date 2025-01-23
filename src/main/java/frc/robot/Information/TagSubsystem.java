@@ -7,6 +7,7 @@ import java.nio.channels.DatagramChannel;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -23,6 +24,7 @@ public class TagSubsystem extends SubsystemBase {
     private boolean isEnabled = false;
     private String lastInput;
     // private TagHandler tagHandler;
+
 
 
     public static double[][] aprilTagCoordinate = {
@@ -43,32 +45,32 @@ public class TagSubsystem extends SubsystemBase {
             { 182.73, 177.10, 52.00, 120 },
             { 182.73, 146.19, 52.00, 240 } };
     public static TagData[] lastAprilTagData = new TagData[30];
-
     public TagData getAprilTag(int id) {
         return lastAprilTagData[id];
     }
+
 
     public static class TagData {
         public int aprilTagID;
         public double x; // How far right or left (I think)
         public double y; // How high or low the april tag is
         public double z; // How far away (I think)
-        public double alpha; // Angle from tag to robot
+        public double alpha; //Angle from tag to robot
     }
 
-    private OdometrySubsystem odomSub;
 
-    public TagSubsystem(OdometrySubsystem odomSub) {
+    public TagSubsystem() {
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
             this.channel.configureBlocking(false);
             this.isEnabled = true;
-        } catch (IOException e) {
+            } catch (IOException e) {
             e.printStackTrace();
         }
-        this.odomSub = odomSub;
-
+        Shuffleboard.getTab("Navigation").addDoubleArray("AprilTag", () -> {
+            return data != null ? new double[] {data.aprilTagID} : new double[]{};
+        });
     }
 
     @Override
@@ -79,6 +81,7 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
+    TagData data;
     //What actually read the data buffer and generates tags as strings
     private void receivePacket() {
         try {
@@ -162,6 +165,7 @@ public class TagSubsystem extends SubsystemBase {
         data.aprilTagID = Integer.parseInt(apriltag);
         return data;
     }
+
 
     //Corrects the apriltag stored data matrix to most recent version
     public void updateTags(TagData dataToUpdate) {

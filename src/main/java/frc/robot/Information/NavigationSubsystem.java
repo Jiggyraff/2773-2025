@@ -55,13 +55,12 @@ public class NavigationSubsystem extends SubsystemBase {
 
   /** Creates a new NavigationSubsystem. */
   public NavigationSubsystem() {
-    this.modulePositions = modulePositions;
 
     Shuffleboard.getTab("Navigation").addDoubleArray("Displacement", () -> {
       return new double[] { displacementX, displacementY };
     });
     Shuffleboard.getTab("Navigation").addDoubleArray("Rotation", () -> {
-      return new double[] { angle };
+      return new double[] { getAdjustedAngle() };
     });
 
     // odometry = new SwerveDriveOdometry(
@@ -69,8 +68,15 @@ public class NavigationSubsystem extends SubsystemBase {
     gyro.reset();
   }
 
-  public double angle() {
-    return this.angle;
+  public double getAdjustedAngle() {
+    double tmpAngle = angle;
+    while (tmpAngle > Math.PI) {
+      tmpAngle -= Math.PI * 2;
+    }
+    while (tmpAngle < -Math.PI) {
+      tmpAngle += Math.PI*2;
+    }
+    return tmpAngle;
   }
 
   public Pose2d pose() {
@@ -83,14 +89,7 @@ public class NavigationSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    angle = (gyro.getYaw() - 0) / 180.0 * Math.PI;
-    // pose = odometry.update(gyro.getRotation2d(), modulePositions.get());
-    // x = pose.getY();
-    // y = -pose.getX();
-    // displacementX = x - savedX;
-    // displacementY = y - savedY;
-    // savedX = x;
-    // savedY = y;
+    angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
   }
 
   public void reset() {

@@ -50,11 +50,7 @@ public class DriveCommand extends Command {
     double x = joy.getLeftX(), y = joy.getLeftY(), r = joy.getRightX();
     double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
     double angle = Math.atan2(y, x);
-    double gyroAngle = kinematicsSubsystem.gyroAngle();
-    
-    SwerveModuleState[] states = kinematicsSubsystem.toSwerveModuleState(new ChassisSpeeds(x, y, r), new Translation2d());
-    kinematicsSubsystem.kinematics.desaturateWheelSpeeds(states, Constants.maxWheelSpeed);
-    kinematicsSubsystem.setModulePos(states);
+    double gyroAngle = navigationSubsystem.getAdjustedAngle();
 
 
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {

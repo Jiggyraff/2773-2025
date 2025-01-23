@@ -15,17 +15,17 @@ import frc.robot.SwerveSubsystems.*;
 import frc.robot.Information.*;
 import frc.robot.Constants;
 
-public class DriveCommand extends Command {
+public class AlternativeDriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
   private final XboxController joy;
-  private final KinematicsSubsystem kinematicsSubsystem;
+  private final NavigationSubsystem navigationSubsystem;
 
   /** Creates a new DriveCommand. */
-  public DriveCommand(DriveSubsystem driveSubsystem, XboxController joy, KinematicsSubsystem kinematicsSubsystem) {
+  public AlternativeDriveCommand(DriveSubsystem driveSubsystem, XboxController joy, NavigationSubsystem navigationSubsystem) {
     this.driveSubsystem = driveSubsystem;
     this.joy = joy;
-    this.kinematicsSubsystem = kinematicsSubsystem;
-    addRequirements(driveSubsystem, kinematicsSubsystem);
+    this.navigationSubsystem = navigationSubsystem;
+    addRequirements(driveSubsystem);
   }
 
   // Called when the command is initially scheduled.
@@ -35,45 +35,28 @@ public class DriveCommand extends Command {
   }
 
   private final Translation2d[] modulePos = {
-    new Translation2d(-Constants.DistanceBetweenWheels/2, Constants.DistanceBetweenWheels/2),
-    new Translation2d(Constants.DistanceBetweenWheels/2, Constants.DistanceBetweenWheels/2),
-    new Translation2d(-Constants.DistanceBetweenWheels/2, -Constants.DistanceBetweenWheels/2),
-    new Translation2d(Constants.DistanceBetweenWheels/2, -Constants.DistanceBetweenWheels/2),
-    };
-
-  SwerveModuleState[] states;
+  new Translation2d(-Constants.DistanceBetweenWheels/2, Constants.DistanceBetweenWheels/2),
+  new Translation2d(Constants.DistanceBetweenWheels/2, Constants.DistanceBetweenWheels/2),
+  new Translation2d(-Constants.DistanceBetweenWheels/2, -Constants.DistanceBetweenWheels/2),
+  new Translation2d(Constants.DistanceBetweenWheels/2, -Constants.DistanceBetweenWheels/2),
+  };
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     final double Deadzone = Constants.ControllerDeadzone;
     double x = joy.getLeftX(), y = joy.getLeftY(), r = joy.getRightX();
-    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
     double angle = Math.atan2(y, x);
-    double gyroAngle = navigationSubsystem.getAdjustedAngle();
+    double gyroAngle = navigationSubsystem.angle();
+ 
+    SwerveDriveKinematics kinematics = new SwerveDriveKinematics(modulePos);
+    SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds(x, y, r), new Translation2d());
+    kinematics.desaturateWheelSpeeds(states, Constants.maxWheelSpeed);
 
-
-    /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {
-       double rotate = joy.getRightX();
-       if (Math.abs(rotate) > Deadzone) {
-         driveSubsystem.rotate(Constants.RotateSpeedMultiplier * rotate);
-       } else {
-         driveSubsystem.stop();
-       }
-     } else {
-       driveSubsystem.directionalDrive(speed, angle - gyroAngle);
-     }*/
-
-    
-    // + (Math.abs(driveSubsystem.setAngle) - Math.abs(gyroAngle));
-    // if (Math.abs(joy.getRightX() + armStick.getLeftX()) > 0.1) {
-    //   driveSubsystem.setAngle = gyroAngle;
-    //   System.out.println("LeftX:" + armStick.getLeftX() + "RightX:" + joy.getRightX());
-    // }
     if (Math.abs(x) < Deadzone && Math.abs(y) < Deadzone && Math.abs(r) < Deadzone) {
       driveSubsystem.stop();
     } else {
-      driveSubsystem.directionalDrive(speed, angle - gyroAngle, Constants.RotateSpeedMultiplier * r);
+      driveSubsystem.setWheelStates(states);
     }
 
   }

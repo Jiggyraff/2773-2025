@@ -25,8 +25,10 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     // private TagHandler tagHandler;
 
+
+
     public static double[][] aprilTagCoordinate = {
-            { 652.73, 196.17, 57.13, 180 },//{ 593.68, 9.68, 53.38, 120 },
+            { 652.73, 196.17, 57.13, 180 }, // { 593.68, 9.68, 53.38, 120 },
             { 637.21, 34.79, 53.38, 120 },
             { 652.73, 196.17, 57.13, 180 },
             { 652.73, 218.42, 57.13, 180 },
@@ -48,7 +50,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public static class TagData{
+    public static class TagData {
         public int aprilTagID;
         public double x; // How far right or left (I think)
         public double y; // How high or low the april tag is
@@ -80,6 +82,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
     TagData data;
+    //What actually read the data buffer and generates tags as strings
     private void receivePacket() {
         try {
             if (channel.receive(buffer) != null) {
@@ -88,11 +91,12 @@ public class TagSubsystem extends SubsystemBase {
                         buffer.remaining());
 
                 this.lastInput = rawText;
-                data = parseTagData(rawText);
+                TagData data = parseTagData(rawText);
                 if (data != null) {
                     // updateOdometry(data);
                     updateTags(data);
-                    System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
+                    // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y +
+                    // " " + data.z);
                 }
                 buffer.clear();
 
@@ -102,51 +106,54 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    public String getLastPacket() {
+    //Returns the last tag's string data
+    public String getLastPacketString() {
         return lastInput;
     }
 
-//     private void updateOdometry(TagData data) {
-// //  System.out.println(" Robot: " + data.aprilTagID + " , " + data.x + ", " + data.z + " " + data.alpha);
-//         double distance = Math.sqrt(data.x * data.x + data.z * data.z);
-//         double angle = -data.alpha + aprilTagCoordinate[data.aprilTagID][3];
-//         double processedX = Math.cos(angle) * distance;
-//         double processedY = Math.sin(angle) * distance;
-//         double robotX = 0.0254 * aprilTagCoordinate[data.aprilTagID-1][0] + processedX;
-//         double robotY = 0.0254 * aprilTagCoordinate[data.aprilTagID-1][1] + processedY;
-//         odomSub.setPosition(robotX, robotY);
-//         // System.out.print(": " + distance + " , " + angle + " "+data.alpha);
+    //No longer used; supposed to be for integration with kinematics
+    // private void updateOdometry(TagData data) {
+    //     // System.out.println(" Robot: " + data.aprilTagID + " , " + data.x + ", " +
+    //     // data.z + " " + data.alpha);
+    //     double distance = Math.sqrt(data.x * data.x + data.z * data.z);
+    //     double angle = -data.alpha + aprilTagCoordinate[data.aprilTagID][3];
+    //     double processedX = Math.cos(angle) * distance;
+    //     double processedY = Math.sin(angle) * distance;
+    //     double robotX = 0.0254 * aprilTagCoordinate[data.aprilTagID - 1][0] + processedX;
+    //     double robotY = 0.0254 * aprilTagCoordinate[data.aprilTagID - 1][1] + processedY;
+    //     odomSub.setPosition(robotX, robotY);public int getSpeakerTagID() {
+    //         if (DriverStation.getAlliance().equals(Alliance.Red)) {
+    //             return Constants.speakerTagIDRed;
+    //         } else
+    //             return Constants.speakerTagIDBlue;
+    //     }
+    
+    //     public double getLastSpeakerDistance() {
+    //         // TagData tempData = getAprilTag(getSpeakerTagID());
+    //         return 4.0;// Math.sqrt(tempData.x * tempData.x + tempData.z * tempData.z);
+    //     }
+    //     // System.out.print(": " + distance + " , " + angle + " "+data.alpha);
+    //     // Transform2d trans = new Transform2d(robotX, robotY, new Rotation2d());
+    //     // odomSub.pose.plus(trans);
+    // }
 
-
-
-//         // Transform2d trans = new Transform2d(robotX, robotY, new Rotation2d());
-//         // odomSub.pose.plus(trans);
-//     }
-
+    //Takes in seen tag data in form of string, and returns it as a TagData object
     public TagData parseTagData(String s) {
-        /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
-        String[] tokens = s.split(";");  
+        /* TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
+        String[] tokens = s.split(";");
         String[] ids = tokens[0].split(": ");
         if (!ids[0].equals("TAG") || tokens.length < 4) {
             return null;
         }
 
         String apriltag = ids[1];
-
         String Group1 = tokens[2];
-
         String[] Num = Group1.split(" ");
-
         double XNum = Double.parseDouble(Num[0]);
-
         double YNum = Double.parseDouble(Num[1]);
-
         double ZNum = Double.parseDouble(Num[2]);
-
         String TagMatrix = tokens[1];
-
         String[] MatrixNum = TagMatrix.split(" ");
-
         double sinAlpha = Double.parseDouble(MatrixNum[0]);
         double minusCosAlpha = Double.parseDouble(MatrixNum[2]);
 
@@ -154,30 +161,18 @@ public class TagSubsystem extends SubsystemBase {
         data.x = XNum;
         data.y = YNum;
         data.z = ZNum;
-        data.alpha = Math.atan2(minusCosAlpha,sinAlpha);
+        data.alpha = Math.atan2(minusCosAlpha, sinAlpha);
         data.aprilTagID = Integer.parseInt(apriltag);
         return data;
     }
 
-    public void updateTags(TagData dataToUpdate)
-    {
+
+    //Corrects the apriltag stored data matrix to most recent version
+    public void updateTags(TagData dataToUpdate) {
         lastAprilTagData[dataToUpdate.aprilTagID] = dataToUpdate;
     }
 
-    public int getSpeakerTagID()
-    {
-        if(DriverStation.getAlliance().equals(Alliance.Red)) {
-            return Constants.speakerTagIDRed;
-        }
-        else return Constants.speakerTagIDBlue;
-    }
-    public double getLastSpeakerDistance()
-    {
-        // TagData tempData = getAprilTag(getSpeakerTagID());
-        return 4.0;//Math.sqrt(tempData.x * tempData.x + tempData.z * tempData.z);
-    }
-    public void printAlliance()
-    {
+    public void printAlliance() {
         System.out.println(DriverStation.getAlliance());
     }
 }

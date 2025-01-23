@@ -39,11 +39,8 @@ public final class Constants {
     
         public static final double DriveSpeedMultiplier = 0.85;
         public static final double RotateSpeedMultiplier = 0.3;
-
-
-        
-    public static final int speakerTagIDRed = 4;
-    public static final int speakerTagIDBlue = 7;
+  //Soft limitations
+  public static final double maxWheelSpeed = 1.0; //meters per second
 
   
   public static final double ControllerDeadzone = 0.1;

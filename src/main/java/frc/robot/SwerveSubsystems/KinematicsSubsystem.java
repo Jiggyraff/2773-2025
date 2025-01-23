@@ -8,14 +8,33 @@ import com.studica.frc.*;
 import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.Constants;
 
 public class KinematicsSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
-  public KinematicsSubsystem() {}
+  public KinematicsSubsystem(DriveSubsystem driveSubsystem) {
+    Shuffleboard.getTab("Navigation").addDoubleArray("flState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[0].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("frState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[1].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("blState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[2].angle.getRadians() };
+    });
+    Shuffleboard.getTab("Navigation").addDoubleArray("brState", () -> {
+      return new double[] { states[0].speedMetersPerSecond, states[3].angle.getRadians() };
+    });
+  }
 
+  DriveSubsystem driveSubsystem;
+
+  double gyroAngle;
   AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
   
   
@@ -34,12 +53,37 @@ public class KinematicsSubsystem extends SubsystemBase {
     new SwerveModuleState(),
     new SwerveModuleState()};
 
-  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(trans);
+  public SwerveDriveKinematics kinematics = new SwerveDriveKinematics(trans);
 
-  SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, null, null);
+  SwerveDriveOdometry odometry = new SwerveDriveOdometry(kinematics, new Rotation2d(gyro.getYaw()), stateToPositions(states));
+  Pose2d pose;
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    gyroAngle = gyro.getYaw() / 180.0 * Math.PI;
     
+    pose = odometry.update(new Rotation2d(gyroAngle), stateToPositions(states));
+  }
+
+  public SwerveModulePosition[] stateToPositions(SwerveModuleState[] states) {
+    SwerveModulePosition[] pos = {
+      new SwerveModulePosition(states[0].speedMetersPerSecond, states[0].angle),
+      new SwerveModulePosition(states[1].speedMetersPerSecond, states[1].angle),
+      new SwerveModulePosition(states[2].speedMetersPerSecond, states[2].angle),
+      new SwerveModulePosition(states[3].speedMetersPerSecond, states[3].angle)
+    };
+    return pos;
+  }
+
+  public double gyroAngle() {
+    return gyroAngle;
+  }
+
+  public SwerveModuleState[] toSwerveModuleState(ChassisSpeeds chassisSpeeds, Translation2d translation2d) {
+    return kinematics.toSwerveModuleStates(chassisSpeeds, translation2d);
+  }
+
+  public void setModulePos(SwerveModuleState[] states) {
+    this.states = states;
   }
 }

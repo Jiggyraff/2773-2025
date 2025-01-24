@@ -65,11 +65,6 @@ public class DriveCommand extends Command {
     if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(r) < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
-      // if (Math.abs(r) < Constants.HOTASRotationDeadzone) {
-      //   r = Math.signum(lastAngle - gyroAngle) * Constants.RotateSpeedMultiplier;
-      // } else {
-      //   r = Constants.RotateSpeedMultiplier * r;
-      // }
       driveSubsystem.directionalDrive(speed, angle - gyroAngle, Constants.RotateSpeedMultiplier * r);
       lastAngle = gyroAngle;
     }

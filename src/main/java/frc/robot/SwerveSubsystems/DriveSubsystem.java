@@ -70,7 +70,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (time == 10) {
       int i = 0;
       deltaRobotX = 0;
       deltaRobotY = 0;
@@ -84,8 +83,8 @@ public class DriveSubsystem extends SubsystemBase {
 
         // }
 
-        deltaCoordinates[i][0] = deltaDistance * Math.cos(module.position()/* + navSub.getAdjustedAngle() */);
-        deltaCoordinates[i][1] = deltaDistance * Math.sin(module.position()/* + navSub.getAdjustedAngle() */);
+        deltaCoordinates[i][0] = deltaDistance * Math.cos(module.position() - navSub.getAdjustedAngle() );
+        deltaCoordinates[i][1] = deltaDistance * Math.sin(module.position() - navSub.getAdjustedAngle() );
 
         deltaRobotX += deltaCoordinates[i][0];
         deltaRobotY += deltaCoordinates[i][1];
@@ -95,9 +94,6 @@ public class DriveSubsystem extends SubsystemBase {
       deltaRobotY = deltaRobotY/4;
       robotX += deltaRobotX * 11.028;
       robotY += deltaRobotY * 11.028;
-      time = 0;
-    }
-    time++;
   }
 
   public void drive(double speed, double rotate) {

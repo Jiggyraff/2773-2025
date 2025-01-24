@@ -37,7 +37,7 @@ public final class Constants {
         public static final int backLeftModuleEncoderCANID = 54;
         public static final int backRightModuleEncoderCANID = 55;
     
-        public static final double DriveSpeedMultiplier = 0.85;
+        public static final double DriveSpeedMultiplier = 0.8;
         public static final double RotateSpeedMultiplier = 0.3;
 
 
@@ -47,4 +47,6 @@ public final class Constants {
 
   
   public static final double ControllerDeadzone = 0.1;
+  public static final double HOTASDeadzone = 0.1;
+  public static final double HOTASRotationDeadzone = 0.5;
 }

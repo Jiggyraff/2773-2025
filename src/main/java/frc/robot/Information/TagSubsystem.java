@@ -5,6 +5,12 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -25,6 +31,8 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     // private TagHandler tagHandler;
 
+    TagData lastTag;
+
     public static double[][] aprilTagCoordinate = {
             { 652.73, 196.17, 57.13, 180 },//{ 593.68, 9.68, 53.38, 120 },
             { 637.21, 34.79, 53.38, 120 },
@@ -43,6 +51,7 @@ public class TagSubsystem extends SubsystemBase {
             { 182.73, 177.10, 52.00, 120 },
             { 182.73, 146.19, 52.00, 240 } };
     public static TagData[] lastAprilTagData = new TagData[30];
+
     public TagData getAprilTag(int id) {
         return lastAprilTagData[id];
     }
@@ -66,8 +75,20 @@ public class TagSubsystem extends SubsystemBase {
             } catch (IOException e) {
             e.printStackTrace();
         }
-        Shuffleboard.getTab("Navigation").addDoubleArray("AprilTag", () -> {
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {
             return data != null ? new double[] {data.aprilTagID} : new double[]{};
+        });
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("X", () -> {
+            return data != null ? new double[] {data.x} : new double[]{};
+        });
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {
+            return data != null ? new double[] {data.y} : new double[]{};
+        });
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {
+            return data != null ? new double[] {data.z} : new double[]{};
+        });
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {
+            return data != null ? new double[] {data.alpha} : new double[]{};
         });
     }
 
@@ -92,7 +113,8 @@ public class TagSubsystem extends SubsystemBase {
                 if (data != null) {
                     // updateOdometry(data);
                     updateTags(data);
-                    System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
+                    lastTag = data;
+                    // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
                 }
                 buffer.clear();
 
@@ -125,6 +147,7 @@ public class TagSubsystem extends SubsystemBase {
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
+        System.out.println(s);
         String[] tokens = s.split(";");  
         String[] ids = tokens[0].split(": ");
         if (!ids[0].equals("TAG") || tokens.length < 4) {
@@ -145,17 +168,32 @@ public class TagSubsystem extends SubsystemBase {
 
         String TagMatrix = tokens[1];
 
+
         String[] MatrixNum = TagMatrix.split(" ");
-
-        double sinAlpha = Double.parseDouble(MatrixNum[0]);
-        double minusCosAlpha = Double.parseDouble(MatrixNum[2]);
-
+        Matrix<N4,N4> rotationMatrix = new Matrix<N4, N4>(N4.instance, N4.instance);
+        for (int i = 0; i < 3; i++ ) {
+            for (int j = 0; j < 3; j++) {
+                rotationMatrix.set(i, j, Double.parseDouble(MatrixNum[i*3 + j]));
+            }
+        }
+        rotationMatrix.set(0, 3, XNum);
+        rotationMatrix.set(1, 3, YNum);
+        rotationMatrix.set(2, 3, ZNum);
+        rotationMatrix.set(3, 3, 1);
+    
+        rotationMatrix = rotationMatrix.inv();
+        
+        
+        double sinAlpha = rotationMatrix.get(0,0);
+        double minusCosAlpha = rotationMatrix.get(0, 2);
+        
         TagData data = new TagData();
-        data.x = XNum;
-        data.y = YNum;
-        data.z = ZNum;
+        data.x = rotationMatrix.get(0, 3);
+        data.y = rotationMatrix.get(1, 3);
+        data.z = rotationMatrix.get(2, 3);
         data.alpha = Math.atan2(minusCosAlpha,sinAlpha);
         data.aprilTagID = Integer.parseInt(apriltag);
+        // System.out.println("Tag: "+rotationMatrix.get(0, 3) + " : "  + rotationMatrix.get(1, 3) + " : "  + rotationMatrix.get(2, 3) + " : " + data.alpha);
         return data;
     }
 

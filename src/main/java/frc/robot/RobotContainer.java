@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -32,42 +33,23 @@ public class RobotContainer {
     return null;
   }
   // Controllers
-  XboxController driveStick = new XboxController(0);
-  XboxController armStick = new XboxController(1);
+  Joystick hotas = new Joystick(1);
+  XboxController secondController = new XboxController(0);
 
   // Subsystems
   NavigationSubsystem navSub = new NavigationSubsystem();
   DriveSubsystem driveSubsystem = new DriveSubsystem(navSub);
-  // IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  // ArmSubsystem armSubsystem = new ArmSubsystem();
-  // ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
-  // ClimbSubsystem climbSubsystem = new ClimbSubsystem(armStick);
-  // OdometrySubsystem odometrySubsystem = new OdometrySubsystem(navigationSubsystem);
   TagSubsystem tagSubsystem = new TagSubsystem();
 
   // Commands from files
-    //Drive Commands
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, driveStick, armStick, navSub);
+  DriveCommand driveCommand = new DriveCommand(driveSubsystem, hotas, secondController, navSub);
   PDownCommand PDownCommand = new PDownCommand(driveSubsystem);
   
   //Buttons
     //driveStick
-  JoystickButton turnToTagButton = new JoystickButton(driveStick, 2);
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
-  JoystickButton resetOrientationButton = new JoystickButton(driveStick, 7);
+  // JoystickButton resetOrientationButton = new JoystickButton(hotas, 7);
     
-  //armStick
-    JoystickButton intakeButton = new JoystickButton(armStick, 2);
-    JoystickButton shootButton = new JoystickButton(armStick, 6);
-
-  JoystickButton sideSpeakerShootButton = new JoystickButton(armStick, 4);
-  JoystickButton middleSpeakerShootButton = new JoystickButton(armStick, 3);
-  JoystickButton reverseIntakeButton = new JoystickButton(armStick, 1);
-  JoystickButton reverseShooterButton = new JoystickButton(armStick, 5);
-    POVButton dpadDownButton = new POVButton(armStick, 0);
-    POVButton dpadRightButton = new POVButton(armStick, 90);
-    POVButton dpadLeftButton = new POVButton(armStick, -90);
-    POVButton dpadUpButton = new POVButton(armStick, 180);
 
     
   

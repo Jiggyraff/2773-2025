@@ -4,6 +4,8 @@
 
 package frc.robot.Commands;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -13,15 +15,17 @@ import frc.robot.Constants;
 
 public class DriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
-  private final XboxController joy;
-  private final XboxController armStick;
+  private final Joystick hotas;
+  private final XboxController secondController;
   private final NavigationSubsystem navigationSubsystem;
 
+  private double lastAngle = 0.0;
+
   /** Creates a new DriveCommand. */
-  public DriveCommand(DriveSubsystem driveSubsystem, XboxController joy, XboxController armStick, NavigationSubsystem navigationSubsystem) {
+  public DriveCommand(DriveSubsystem driveSubsystem, Joystick hotas, XboxController armStick, NavigationSubsystem navigationSubsystem) {
     this.driveSubsystem = driveSubsystem;
-    this.joy = joy;
-    this.armStick = armStick;
+    this.hotas = hotas;
+    this.secondController = armStick;
     this.navigationSubsystem = navigationSubsystem;
     addRequirements(driveSubsystem);
   }
@@ -35,12 +39,11 @@ public class DriveCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    final double Deadzone = Constants.ControllerDeadzone;
-    double x = joy.getLeftX(), y = joy.getLeftY();
-    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
+    double x = hotas.getX(), y = hotas.getY();
     double angle = Math.atan2(y, x);
     double gyroAngle = navigationSubsystem.getAdjustedAngle();
-
+    double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
+    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier * sensitivity;
 
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {
        double rotate = joy.getRightX();
@@ -54,16 +57,23 @@ public class DriveCommand extends Command {
      }*/
 
     
-    double r = joy.getRightX() + armStick.getLeftX();// + (Math.abs(driveSubsystem.setAngle) - Math.abs(gyroAngle));
+    double r = hotas.getZ() + secondController.getLeftX();// + (Math.abs(driveSubsystem.setAngle) - Math.abs(gyroAngle));
     // if (Math.abs(joy.getRightX() + armStick.getLeftX()) > 0.1) {
     //   driveSubsystem.setAngle = gyroAngle;
     //   System.out.println("LeftX:" + armStick.getLeftX() + "RightX:" + joy.getRightX());
     // }
-    if (Math.abs(x) < Deadzone && Math.abs(y) < Deadzone && Math.abs(r) < Deadzone) {
+    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(r) < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
+      if (Math.abs(r) < Constants.HOTASRotationDeadzone) {
+        r = Math.signum(lastAngle - gyroAngle) * Constants.RotateSpeedMultiplier;
+      } else {
+        r = Constants.RotateSpeedMultiplier * r;
+      }
       driveSubsystem.directionalDrive(speed, angle - gyroAngle, Constants.RotateSpeedMultiplier * r);
+      lastAngle = gyroAngle;
     }
+    
 
   }
 

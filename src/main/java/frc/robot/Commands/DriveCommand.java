@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Information.*;
 import frc.robot.Constants;
@@ -42,8 +43,8 @@ public class DriveCommand extends Command {
     double x = hotas.getX(), y = hotas.getY();
     double angle = Math.atan2(y, x);
     double gyroAngle = navigationSubsystem.getAdjustedAngle();
-    double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier * sensitivity;
+    // double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
+    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
 
     /* if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) {
        double rotate = joy.getRightX();
@@ -55,20 +56,18 @@ public class DriveCommand extends Command {
      } else {
        driveSubsystem.directionalDrive(speed, angle - gyroAngle);
      }*/
-
     
     double r = hotas.getZ() + secondController.getLeftX();// + (Math.abs(driveSubsystem.setAngle) - Math.abs(gyroAngle));
-    // if (Math.abs(joy.getRightX() + armStick.getLeftX()) > 0.1) {
-    //   driveSubsystem.setAngle = gyroAngle;
-    //   System.out.println("LeftX:" + armStick.getLeftX() + "RightX:" + joy.getRightX());
-    // }
+
+    r = MathUtil.applyDeadband(r, Constants.HOTASRotationDeadzone);
+
     if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(r) < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
       driveSubsystem.directionalDrive(speed, angle - gyroAngle, Constants.RotateSpeedMultiplier * r);
       lastAngle = gyroAngle;
     }
-    
+        
 
   }
 

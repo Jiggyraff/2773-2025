@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TagSubsystem extends SubsystemBase {
 
@@ -51,6 +52,7 @@ public class TagSubsystem extends SubsystemBase {
             { 182.73, 177.10, 52.00, 120 },
             { 182.73, 146.19, 52.00, 240 } };
     public static TagData[] lastAprilTagData = new TagData[30];
+    public DriveSubsystem driveSub;
 
     public TagData getAprilTag(int id) {
         return lastAprilTagData[id];
@@ -66,7 +68,8 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public TagSubsystem() {
+    public TagSubsystem(DriveSubsystem driveSub) {
+        this.driveSub = driveSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
@@ -147,7 +150,7 @@ public class TagSubsystem extends SubsystemBase {
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
-        System.out.println(s);
+        // System.out.println(s);
         String[] tokens = s.split(";");  
         String[] ids = tokens[0].split(": ");
         if (!ids[0].equals("TAG") || tokens.length < 4) {

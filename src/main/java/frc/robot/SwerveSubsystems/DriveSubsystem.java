@@ -67,10 +67,12 @@ public class DriveSubsystem extends SubsystemBase {
   double deltaRobotX = 0;
   double deltaRobotY = 0;
   double miscDeltaDistance = 0;
+  public double gyroAngle;
 
   @Override
   public void periodic() {
       int i = 0;
+      gyroAngle = navSub.getAdjustedAngle();
       deltaRobotX = 0;
       deltaRobotY = 0;
       for (SwerveDriveModule module : modules) {

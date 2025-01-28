@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
+import frc.robot.Autonomous.RotateToCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
 
@@ -29,31 +30,33 @@ public class RobotContainer {
     configureBindings();
   }
   //Auto chooser for Robot.java
-  public Command getAutonomousCommand() {
-    return null;
-  }
   // Controllers
-  Joystick hotas = new Joystick(1);
-  XboxController secondController = new XboxController(0);
-
+  Joystick hotas = new Joystick(0);
+  
+  XboxController secondController = new XboxController(1);
+  
   // Subsystems
   NavigationSubsystem navSub = new NavigationSubsystem();
   DriveSubsystem driveSubsystem = new DriveSubsystem(navSub);
-  TagSubsystem tagSubsystem = new TagSubsystem();
-
+  TagSubsystem tagSubsystem = new TagSubsystem(driveSubsystem);
+  
   // Commands from files
   DriveCommand driveCommand = new DriveCommand(driveSubsystem, hotas, secondController, navSub);
   PDownCommand PDownCommand = new PDownCommand(driveSubsystem);
   
+  RotateToCommand rotateToCommand = new RotateToCommand(driveSubsystem, Math.PI/2, 0.5);
   //Buttons
-    //driveStick
+  //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
   // JoystickButton resetOrientationButton = new JoystickButton(hotas, 7);
-    
-
+  
+  
     
   
   private void configureBindings() {
     driveSubsystem.setDefaultCommand(driveCommand);
+  }
+  public Command getAutonomousCommand() {
+    return rotateToCommand;
   }
 }

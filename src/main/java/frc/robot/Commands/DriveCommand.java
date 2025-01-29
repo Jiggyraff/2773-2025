@@ -42,7 +42,7 @@ public class DriveCommand extends Command {
   public void execute() {
     double x = hotas.getX(), y = hotas.getY();
     double angle = Math.atan2(y, x);
-    double gyroAngle = navigationSubsystem.getAdjustedAngle();
+    double gyroAngle = navigationSubsystem.getGyroAngle();
     // double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
     double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier;
 

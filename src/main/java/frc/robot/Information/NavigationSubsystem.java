@@ -4,96 +4,99 @@
 
 package frc.robot.Information;
 
-import java.util.function.Supplier;
-
-import com.studica.frc.*;
+import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.SwerveSubsystems.DriveSubsystem;
+import frc.robot.SwerveSubsystems.SwerveDriveModule;
 
 public class NavigationSubsystem extends SubsystemBase {
+
+  DriveSubsystem driveSub;
+
+  double angle;
+  double[] previousDistanceValues = {0.0,0.0,0.0,0.0};
+  // [0] = x, [1] = y
+  double[][] deltaCoordinates = new double[4][2];
+  double robotX = 0.0;
+  double robotY = 0.0;
+  double deltaRobotX = 0;
+  double deltaRobotY = 0;
+  double miscDeltaDistance = 0;
   public AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
-  public double angle;
-  // Locations for the swerve drive modules relative to the robot center.
-  Translation2d frontLeftLocation = new Translation2d(-Constants.DistanceBetweenWheels / 2,
-      Constants.DistanceBetweenWheels / 2);
-  Translation2d frontRightLocation = new Translation2d(Constants.DistanceBetweenWheels / 2,
-      Constants.DistanceBetweenWheels / 2);
-  Translation2d backLeftLocation = new Translation2d(-Constants.DistanceBetweenWheels / 2,
-      -Constants.DistanceBetweenWheels / 2);
-  Translation2d backRightLocation = new Translation2d(Constants.DistanceBetweenWheels / 2,
-      -Constants.DistanceBetweenWheels / 2);
 
-  // Creating my kinematics object using the module locations
-  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
-      frontLeftLocation, frontRightLocation, backLeftLocation, backRightLocation);
-  double pitch;
-  private Supplier<SwerveModulePosition[]> modulePositions;
 
-  private double x;
-  private double y;
-
-  public double savedX;
-  public double savedY;
-
-  public double displacementX;
-  public double displacementY;
-
-  private SwerveDriveOdometry odometry;
-  public Pose2d pose;
-
-//   public OdometrySubsystem odomSub;
-
-  /** Creates a new NavigationSubsystem. */
-  public NavigationSubsystem() {
-
-    Shuffleboard.getTab("Navigation").addDoubleArray("Displacement", () -> {
-      return new double[] { displacementX, displacementY };
-    });
+  /** Creates a new KinematicsSubsystem. */
+  public NavigationSubsystem(DriveSubsystem driveSub) {
+    this.driveSub = driveSub;
     Shuffleboard.getTab("Navigation").addDoubleArray("Rotation", () -> {
-      return new double[] { getAdjustedAngle() };
+      return new double[] { getGyroAngle() };
     });
-
-    // odometry = new SwerveDriveOdometry(
-    //     kinematics, gyro.getRotation2d(), modulePositions.get(), new Pose2d(0.0, 0.0, new Rotation2d()));
+    Shuffleboard.getTab("Encoders").addDoubleArray("flMotor", () -> {return new double[] { driveSub.modules[0].position(), driveSub.modules[0].totalDistanceTraveled() };});
+    Shuffleboard.getTab("Encoders").addDoubleArray("frMotor", () -> {return new double[] { driveSub.modules[1].position(), driveSub.modules[1].totalDistanceTraveled() };});
+    Shuffleboard.getTab("Encoders").addDoubleArray("blMotor", () -> {return new double[] { driveSub.modules[2].position(), driveSub.modules[2].totalDistanceTraveled() };});
+    Shuffleboard.getTab("Encoders").addDoubleArray("brMotor", () -> {return new double[] { driveSub.modules[3].position(), driveSub.modules[3].totalDistanceTraveled() };});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("Robot", () -> {return new double[] {robotX, robotY};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("deltaRobot", () -> {return new double[] {deltaRobotX, deltaRobotY};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("flMotor", () -> {return new double[] {deltaCoordinates[0][0], deltaCoordinates[0][1]};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("frMotor", () -> {return new double[] {deltaCoordinates[1][0], deltaCoordinates[1][1]};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("blMotor", () -> {return new double[] {deltaCoordinates[2][0], deltaCoordinates[2][1]};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("brMotor", () -> {return new double[] {deltaCoordinates[3][0], deltaCoordinates[3][1]};});
+    Shuffleboard.getTab("Kinematics").addDoubleArray("miscMotor", () -> {return new double[] {miscDeltaDistance};});
     gyro.reset();
   }
 
-  public double getAdjustedAngle() {
-    double tmpAngle = angle;
-    while (tmpAngle > Math.PI) {
-      tmpAngle -= Math.PI * 2;
+  @Override
+  public void periodic() {
+    // This method will be called once per scheduler run
+    int i = 0;
+    deltaRobotX = 0;
+    deltaRobotY = 0;
+    for (SwerveDriveModule module : driveSub.modules) {
+      double deltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
+      miscDeltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
+      previousDistanceValues[i] = module.totalDistanceTraveled();
+      deltaCoordinates[i][0] = deltaDistance * Math.cos(module.position() - getGyroAngle() );
+      deltaCoordinates[i][1] = deltaDistance * Math.sin(module.position() - getGyroAngle() );
+      deltaRobotX += deltaCoordinates[i][0];
+      deltaRobotY += deltaCoordinates[i][1];
+      i++;
     }
-    while (tmpAngle < -Math.PI) {
-      tmpAngle += Math.PI*2;
-    }
-    return tmpAngle;
+    deltaRobotX = deltaRobotX/4;
+    deltaRobotY = deltaRobotY/4;
+    robotX += deltaRobotX * 11.028;
+    robotY += deltaRobotY * 11.028;
+    i++;
   }
 
-  public Pose2d pose() {
-    return pose;
+  public void setPosition(double x, double y) {
+    robotX = x;
+    robotY = y;
   }
 
   public void resetOrientation() {
     gyro.reset();
   }
 
-  @Override
-  public void periodic() {
-    angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
+  public double getGyroAngle() {
+    double angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
+    while (angle > Math.PI) {
+      angle -= Math.PI * 2;
+    }
+    while (angle < -Math.PI) {
+      angle += Math.PI*2;
+    }
+    return angle;
   }
 
-  public void reset() {
-    x = 0;
-    y = 0;
+  public double averageDistanceTraveled() {
+    double averageDistance = 0;
+    for (SwerveDriveModule module : driveSub.modules) {
+      averageDistance += module.totalDistanceTraveled();
+    }
+    averageDistance /= 4;
+    return averageDistance;
   }
 }

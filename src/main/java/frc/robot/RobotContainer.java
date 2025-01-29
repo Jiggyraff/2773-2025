@@ -36,15 +36,16 @@ public class RobotContainer {
   XboxController secondController = new XboxController(1);
   
   // Subsystems
-  NavigationSubsystem navSub = new NavigationSubsystem();
-  DriveSubsystem driveSubsystem = new DriveSubsystem(navSub);
-  TagSubsystem tagSubsystem = new TagSubsystem(driveSubsystem);
+  NavigationSubsystem navSub;
+  DriveSubsystem driveSub = new DriveSubsystem(navSub);
+  navSub = new NavigationSubsystem(driveSub);
+  TagSubsystem tagSubsystem = new TagSubsystem(navSub);
   
   // Commands from files
-  DriveCommand driveCommand = new DriveCommand(driveSubsystem, hotas, secondController, navSub);
-  PDownCommand PDownCommand = new PDownCommand(driveSubsystem);
+  DriveCommand driveCommand = new DriveCommand(driveSub, hotas, secondController, navSub);
+  PDownCommand PDownCommand = new PDownCommand(driveSub);
   
-  RotateToCommand rotateToCommand = new RotateToCommand(driveSubsystem, Math.PI/2, 0.5);
+  RotateToCommand rotateToCommand = new RotateToCommand(Math.PI/2, driveSub);
   //Buttons
   //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -54,7 +55,7 @@ public class RobotContainer {
     
   
   private void configureBindings() {
-    driveSubsystem.setDefaultCommand(driveCommand);
+    driveSub.setDefaultCommand(driveCommand);
   }
   public Command getAutonomousCommand() {
     return rotateToCommand;

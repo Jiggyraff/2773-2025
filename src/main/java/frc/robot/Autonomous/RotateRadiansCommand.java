@@ -7,35 +7,38 @@ package frc.robot.Autonomous;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Information.NavigationSubsystem;
 import frc.robot.SwerveSubsystems.*;
 
-public class RotateToCommand extends Command {
+public class RotateRadiansCommand extends Command {
 
+  NavigationSubsystem navSub;
   DriveSubsystem driveSub;
-  double destination;
+  double radians;
 
   PIDController rotatePID = new PIDController(0.63, 0, 0);
 
-  public RotateToCommand(double destination, DriveSubsystem driveSubsystem) {
-    addRequirements(driveSubsystem);
+  public RotateRadiansCommand(double radians, NavigationSubsystem navigationSubsystem, DriveSubsystem driveSubsystem) {
+    addRequirements(navigationSubsystem, driveSubsystem);
+    this.navSub = navigationSubsystem;
     this.driveSub = driveSubsystem;
-    this.destination = destination;
+    this.radians = radians;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    double radians = destination - driveSub.navSub.getGyroAngle();
+    radians += driveSub.navSub.getGyroAngle();
     rotatePID.setSetpoint(radians);
     rotatePID.setTolerance(0.01);
     System.out.println();
-    System.out.println("Rotate Robot Going To: " + destination + " , "  + (destination - driveSub.navSub.getGyroAngle()));
+    System.out.println("Rotate Robot Going To: " + radians + " , "  + (radians - navSub.getGyroAngle()));
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double speedOfRotation = rotatePID.calculate(driveSub.navSub.getGyroAngle());
+    double speedOfRotation = rotatePID.calculate(navSub.getGyroAngle());
     speedOfRotation = MathUtil.clamp(speedOfRotation, -0.3, 0.3);
     driveSub.rotate(speedOfRotation);
   }
@@ -44,7 +47,7 @@ public class RotateToCommand extends Command {
   @Override
   public void end(boolean interrupted) {
     driveSub.stop();
-    System.out.println("Rotate Robot Ended At:" + driveSub.navSub.getGyroAngle());
+    System.out.println("Rotate Robot Ended At:" + navSub.getGyroAngle());
     System.out.println();
   }
 

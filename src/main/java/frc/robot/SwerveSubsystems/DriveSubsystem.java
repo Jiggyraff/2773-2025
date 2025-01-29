@@ -21,6 +21,7 @@ public class DriveSubsystem extends SubsystemBase {
   public double i = 0.0;
   public double d = 0.0;
 
+  public NavigationSubsystem navSub;
   
   public SwerveModulePosition[] getPositions()
   {
@@ -35,67 +36,19 @@ public class DriveSubsystem extends SubsystemBase {
   // PIDController blPID = new PIDController(0.63, 0, 0);
   // PIDController brPID = new PIDController(0.63, 0, 0);
   // boolean initDone = false;
-  NavigationSubsystem navSub;
 
   /** Creates a new TestSubsystem. */
   public DriveSubsystem(NavigationSubsystem navSub) {
-    this.navSub = navSub;
-    robotY = 0.0;
-    robotX = 0.0;
     Shuffleboard.getTab("Navigation").addDoubleArray("Set Angle gilcswdicqewe", () -> {return new double[] {setAngle};});
-    Shuffleboard.getTab("Encoders").addDoubleArray("flMotor", () -> {return new double[] { flMotor.position(), flMotor.totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("frMotor", () -> {return new double[] { frMotor.position(), frMotor.totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("blMotor", () -> {return new double[] { blMotor.position(), blMotor.totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("brMotor", () -> {return new double[] { brMotor.position(), brMotor.totalDistanceTraveled() };});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("Robot", () -> {return new double[] {robotX, robotY};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("deltaRobot", () -> {return new double[] {deltaRobotX, deltaRobotY};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("flMotor", () -> {return new double[] {deltaCoordinates[0][0], deltaCoordinates[0][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("frMotor", () -> {return new double[] {deltaCoordinates[1][0], deltaCoordinates[1][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("blMotor", () -> {return new double[] {deltaCoordinates[2][0], deltaCoordinates[2][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("brMotor", () -> {return new double[] {deltaCoordinates[3][0], deltaCoordinates[3][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("miscMotor", () -> {return new double[] {miscDeltaDistance};});
+    this.navSub = navSub;
   }
 
 
-  double[] previousDistanceValues = {0.0,0.0,0.0,0.0};
-  SwerveDriveModule[] modules = {flMotor, frMotor, blMotor, brMotor};
-  // [0] = x, [1] = y
-  double[][] deltaCoordinates = new double[4][2];
-  double robotX = 0.0;
-  double robotY = 0.0;
-  double time = 0;
-  double deltaRobotX = 0;
-  double deltaRobotY = 0;
-  double miscDeltaDistance = 0;
-  public double gyroAngle;
+  public SwerveDriveModule[] modules = {flMotor, frMotor, blMotor, brMotor};
 
   @Override
   public void periodic() {
-      int i = 0;
-      gyroAngle = navSub.getAdjustedAngle();
-      deltaRobotX = 0;
-      deltaRobotY = 0;
-      for (SwerveDriveModule module : modules) {
-        double deltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
-        miscDeltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
-        previousDistanceValues[i] = module.totalDistanceTraveled();
-
-        // double fieldCentricAngle;
-        // if (module.position() > Math.PI) {
-
-        // }
-
-        deltaCoordinates[i][0] = deltaDistance * Math.cos(module.position() - navSub.getAdjustedAngle() );
-        deltaCoordinates[i][1] = deltaDistance * Math.sin(module.position() - navSub.getAdjustedAngle() );
-
-        deltaRobotX += deltaCoordinates[i][0];
-        deltaRobotY += deltaCoordinates[i][1];
-        i++;
-      }
-      deltaRobotX = deltaRobotX/4;
-      deltaRobotY = deltaRobotY/4;
-      robotX += deltaRobotX * 11.028;
-      robotY += deltaRobotY * 11.028;
+      
   }
 
   public void drive(double speed, double rotate) {

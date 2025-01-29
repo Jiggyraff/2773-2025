@@ -20,6 +20,9 @@ import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TagSubsystem extends SubsystemBase {
 
+    //Subsystens
+    NavigationSubsystem navSub;
+
     // PORT
     private final int PORT = 15200;
     DatagramChannel channel;
@@ -30,29 +33,44 @@ public class TagSubsystem extends SubsystemBase {
     // RECEIVE PACKETS (TRUE WHEN SOCKET IS INIT)
     private boolean isEnabled = false;
     private String lastInput;
-    // private TagHandler tagHandler;
 
+
+    //Tag Data Stuff
     TagData lastTag;
+    Boolean syncTags;
+    double[][] aprilTagPositions = 
+        //   ID    X       Y       Z    Zrot Yrot   >>>>   explained below          
+           {{1, 657.37,  25.80,  58.50, 126, 0},
+            {2, 657.37,  291.20, 58.50, 234, 0},
+            {3, 455.15,  317.15, 51.25, 270, 0},
+            {4, 365.20,  241.64, 73.54, 0,   30},
+            {5, 365.20,  75.39,  73.54, 0,   30},
+            {6, 530.49,  130.17, 12.13, 300, 0},
+            {7, 546.87,  158.50, 12.13, 0,   0},
+            {8, 530.49,  186.83, 12.13, 60,  0},
+            {9, 497.77,  186.83, 12.13, 120, 0},
+            {10, 481.39, 158.50, 12.13, 180, 0},
+            {11, 497.77, 130.17, 12.13, 240, 0},
+            {12, 33.51,  25.80,  58.50, 54,  0},
+            {13, 33.51,  291.20, 58.50, 306, 0},
+            {14, 325.68, 241.64, 73.54, 180, 30},
+            {15, 325.68, 75.39,  73.54, 180, 30},
+            {16, 235.73, -0.15,  51.25, 90,  0},
+            {17, 160.39, 130.17, 12.13, 240, 0},
+            {18, 144.00, 158.50, 12.13, 180, 0},
+            {19, 160.39, 186.83, 12.13, 120, 0},
+            {20, 193.10, 186.83, 12.13, 60,  0},
+            {21, 209.49, 158.50, 12.13, 0,   0},
+            {22, 193.10, 130.17, 12.13, 300, 0}};
 
-    public static double[][] aprilTagCoordinate = {
-            { 652.73, 196.17, 57.13, 180 },//{ 593.68, 9.68, 53.38, 120 },
-            { 637.21, 34.79, 53.38, 120 },
-            { 652.73, 196.17, 57.13, 180 },
-            { 652.73, 218.42, 57.13, 180 },
-            { 578.77, 323.00, 53.38, 270 },
-            { 72.5, 323.00, 53.38, 270 },
-            { -1.50, 218.42, 57.13, 0 },
-            { -1.50, 196.17, 57.13, 0 },
-            { 14.02, 34.79, 53.3, 60 },
-            { 57.54, 9.68, 53.3, 60 },
-            { 468.69, 146.19, 52.00, 300 },
-            { 468.69, 177.10, 52.0, 60 },
-            { 441.74, 161.62, 52.00, 180 },
-            { 209.48, 161.62, 52.00, 0 },
-            { 182.73, 177.10, 52.00, 120 },
-            { 182.73, 146.19, 52.00, 240 } };
+        //https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings.pdf
+        //+X is distance along length of field from BLUE reef side
+        //+Y is distance along short side of field from RED barge/processor
+        //+Z is up from ground
+        //Zrot is rotation around Z axis, with 0 being facing towards RED reef
+        //Yrot is rotation around Y axis, with 0 being facing forward. Weird values tho, 5 and 15 should not be the same
+
     public static TagData[] lastAprilTagData = new TagData[30];
-    public DriveSubsystem driveSub;
 
     public TagData getAprilTag(int id) {
         return lastAprilTagData[id];
@@ -61,15 +79,16 @@ public class TagSubsystem extends SubsystemBase {
 
     public static class TagData{
         public int aprilTagID;
-        public double x; // How far right or left (I think)
-        public double y; // How high or low the april tag is
-        public double z; // How far away (I think)
-        public double alpha; //Angle from tag to robot
+        public double x; //How far left or right, with to the right (from the tag's POV) being negative
+        public double y; // How high or low the april tag is from the cam
+        public double z; // How far away, with negative being forward, in front of the tag. It should never be +
+        public double alpha; //Angle from tag to robot. What direction? Don't ask. (hint: idk)
     }
 
 
-    public TagSubsystem(DriveSubsystem driveSub) {
-        this.driveSub = driveSub;
+    public TagSubsystem(NavigationSubsystem navSub) {
+        syncTags = false;
+        this.navSub = navSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
@@ -131,22 +150,12 @@ public class TagSubsystem extends SubsystemBase {
         return lastInput;
     }
 
-//     private void updateOdometry(TagData data) {
-// //  System.out.println(" Robot: " + data.aprilTagID + " , " + data.x + ", " + data.z + " " + data.alpha);
-//         double distance = Math.sqrt(data.x * data.x + data.z * data.z);
-//         double angle = -data.alpha + aprilTagCoordinate[data.aprilTagID][3];
-//         double processedX = Math.cos(angle) * distance;
-//         double processedY = Math.sin(angle) * distance;
-//         double robotX = 0.0254 * aprilTagCoordinate[data.aprilTagID-1][0] + processedX;
-//         double robotY = 0.0254 * aprilTagCoordinate[data.aprilTagID-1][1] + processedY;
-//         odomSub.setPosition(robotX, robotY);
-//         // System.out.print(": " + distance + " , " + angle + " "+data.alpha);
-
-
-
-//         // Transform2d trans = new Transform2d(robotX, robotY, new Rotation2d());
-//         // odomSub.pose.plus(trans);
-//     }
+    private void updateOdometry(TagData data) {
+        double angleFromHorizontal = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180;
+        double x = -data.z*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1];
+        double y =  data.x*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2];
+        navSub.setPosition(x, y);
+    }
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
@@ -156,21 +165,14 @@ public class TagSubsystem extends SubsystemBase {
         if (!ids[0].equals("TAG") || tokens.length < 4) {
             return null;
         }
-
-        String apriltag = ids[1];
-
-        String Group1 = tokens[2];
-
-        String[] Num = Group1.split(" ");
-
-        double XNum = Double.parseDouble(Num[0]);
-
-        double YNum = Double.parseDouble(Num[1]);
-
-        double ZNum = Double.parseDouble(Num[2]);
-
         String TagMatrix = tokens[1];
 
+        String apriltag = ids[1];
+        String Group1 = tokens[2];
+        String[] Num = Group1.split(" ");
+        double XNum = Double.parseDouble(Num[0]);
+        double YNum = Double.parseDouble(Num[1]);
+        double ZNum = Double.parseDouble(Num[2]);
 
         String[] MatrixNum = TagMatrix.split(" ");
         Matrix<N4,N4> rotationMatrix = new Matrix<N4, N4>(N4.instance, N4.instance);
@@ -196,6 +198,10 @@ public class TagSubsystem extends SubsystemBase {
         data.z = rotationMatrix.get(2, 3);
         data.alpha = Math.atan2(minusCosAlpha,sinAlpha);
         data.aprilTagID = Integer.parseInt(apriltag);
+
+        if (syncTags) {
+            updateOdometry(data);
+        }
         // System.out.println("Tag: "+rotationMatrix.get(0, 3) + " : "  + rotationMatrix.get(1, 3) + " : "  + rotationMatrix.get(2, 3) + " : " + data.alpha);
         return data;
     }

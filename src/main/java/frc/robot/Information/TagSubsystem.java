@@ -19,9 +19,8 @@ import frc.robot.Constants;
 import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TagSubsystem extends SubsystemBase {
-
-    //Subsystens
-    NavigationSubsystem navSub;
+    //Subsystems
+    OdometrySubsystem odomSub;
 
     // PORT
     private final int PORT = 15200;
@@ -31,16 +30,21 @@ public class TagSubsystem extends SubsystemBase {
     ByteBuffer buffer = ByteBuffer.allocate(200);
 
     // RECEIVE PACKETS (TRUE WHEN SOCKET IS INIT)
-    private boolean isEnabled = false;
     private String lastInput;
-
+    
+    //Subsystem state variables
+    private Boolean isEnabled = false;     //Deactivates everything
+    private Boolean syncTags = true;       //Stops feeding to nav
+    private Boolean cautiousMode = false;  //Checks if the data *could* be reliable based off parameters
+    private double alphaTolerance = 0.05;
+    private double distanceTolerance = 1;
 
     //Tag Data Stuff
     TagData lastTag;
-    Boolean syncTags;
     double[][] aprilTagPositions = 
         //   ID    X       Y       Z    Zrot Yrot   >>>>   explained below          
-           {{1, 657.37,  25.80,  58.50, 126, 0},
+           {//{1, 1,  2,  43, 0, 0},
+            {1, 657.37,  25.80,  58.50, 126, 0},
             {2, 657.37,  291.20, 58.50, 234, 0},
             {3, 455.15,  317.15, 51.25, 270, 0},
             {4, 365.20,  241.64, 73.54, 0,   30},
@@ -86,9 +90,9 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public TagSubsystem(NavigationSubsystem navSub) {
+    public TagSubsystem(OdometrySubsystem odomSub) {
         syncTags = false;
-        this.navSub = navSub;
+        this.odomSub = odomSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
@@ -97,26 +101,15 @@ public class TagSubsystem extends SubsystemBase {
             } catch (IOException e) {
             e.printStackTrace();
         }
-        Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {
-            return data != null ? new double[] {data.aprilTagID} : new double[]{};
-        });
-        Shuffleboard.getTab("April Tag Data").addDoubleArray("X", () -> {
-            return data != null ? new double[] {data.x} : new double[]{};
-        });
-        Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {
-            return data != null ? new double[] {data.y} : new double[]{};
-        });
-        Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {
-            return data != null ? new double[] {data.z} : new double[]{};
-        });
-        Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {
-            return data != null ? new double[] {data.alpha} : new double[]{};
-        });
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {return data != null ? new double[] {data.aprilTagID} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("X", () -> {return data != null ? new double[] {data.x} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {return data != null ? new double[] {data.y} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {return data != null ? new double[] {data.z} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
     }
 
     @Override
     public void periodic() {
-
         if (isEnabled) {
             receivePacket();
         }
@@ -146,15 +139,19 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    public String getLastPacket() {
-        return lastInput;
+    public TagData getLastTagData() {
+        return lastTag;
     }
 
     private void updateOdometry(TagData data) {
-        double angleFromHorizontal = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180;
-        double x = -data.z*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1];
-        double y =  data.x*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2];
-        navSub.setPosition(x, y);
+        if (!cautiousMode || (-alphaTolerance < data.alpha && data.alpha < alphaTolerance && -distanceTolerance < -data.z && -data.z < distanceTolerance)) {
+            double angleFromHorizontal = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180;
+            double x = -data.z*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1] * 0.0254;
+            double y =  data.x*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2] * 0.0254;
+            double radians = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180 - Math.PI - data.alpha;
+            odomSub.setXY(x, y, radians);
+            // System.out.println("X:" + x + "Y:" + y + "Alpha:" + data.alpha);
+        }
     }
 
     public TagData parseTagData(String s) {
@@ -168,6 +165,22 @@ public class TagSubsystem extends SubsystemBase {
         String TagMatrix = tokens[1];
 
         String apriltag = ids[1];
+        double[] tagInfo = aprilTagPositions[Integer.parseInt(apriltag)-1];
+
+        double yRot = (-tagInfo[4] + 0) / 180.0 * Math.PI;
+        Matrix<N4,N4> tagMatrix = new Matrix<N4, N4>(N4.instance, N4.instance);
+        tagMatrix.set(0,0, Math.sin(yRot));
+        tagMatrix.set(0,2, Math.cos(yRot));
+        tagMatrix.set(1,1, 1.0);
+        tagMatrix.set(2,0, Math.cos(yRot));
+        tagMatrix.set(2,2, -Math.sin(yRot));
+        tagMatrix.set(3,3, 1.0);
+        tagMatrix.set(0,3, -tagInfo[1]*0.0254);
+        tagMatrix.set(1,3, -tagInfo[3]*0.0254);
+        tagMatrix.set(2,3, -tagInfo[2]*0.0254); 
+
+
+
         String Group1 = tokens[2];
         String[] Num = Group1.split(" ");
         double XNum = Double.parseDouble(Num[0]);
@@ -186,7 +199,7 @@ public class TagSubsystem extends SubsystemBase {
         rotationMatrix.set(2, 3, ZNum);
         rotationMatrix.set(3, 3, 1);
     
-        rotationMatrix = rotationMatrix.inv();
+        rotationMatrix = /*tagMatrix.times(*/rotationMatrix.inv()/*)*/;
         
         
         double sinAlpha = rotationMatrix.get(0,0);
@@ -226,5 +239,25 @@ public class TagSubsystem extends SubsystemBase {
     public void printAlliance()
     {
         System.out.println(DriverStation.getAlliance());
+    }
+
+    public void enable() {
+        if (syncTags) {
+            syncTags = false;
+            System.out.println("Tags no longer feeding navigation");
+        } else {
+            syncTags = true;
+            System.out.println("Tags feeding navigation");
+        }
+    }
+
+    public void cautiousMode() {
+        if (cautiousMode) {
+            cautiousMode = false;
+            System.out.println("Cautious mode off");
+        } else {
+            cautiousMode = true;
+            System.out.println("Cautious mode on");
+        }
     }
 }

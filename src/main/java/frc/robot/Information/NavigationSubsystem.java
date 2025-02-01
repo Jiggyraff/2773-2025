@@ -27,25 +27,27 @@ public class NavigationSubsystem extends SubsystemBase {
   double miscDeltaDistance = 0;
   public AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
 
+  //Misc Variables
+  double sensitivity;
+
 
   /** Creates a new KinematicsSubsystem. */
   public NavigationSubsystem(DriveSubsystem driveSub) {
     this.driveSub = driveSub;
-    Shuffleboard.getTab("Navigation").addDoubleArray("Rotation", () -> {
-      return new double[] { getGyroAngle() };
-    });
-    Shuffleboard.getTab("Encoders").addDoubleArray("flMotor", () -> {return new double[] { driveSub.modules[0].position(), driveSub.modules[0].totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("frMotor", () -> {return new double[] { driveSub.modules[1].position(), driveSub.modules[1].totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("blMotor", () -> {return new double[] { driveSub.modules[2].position(), driveSub.modules[2].totalDistanceTraveled() };});
-    Shuffleboard.getTab("Encoders").addDoubleArray("brMotor", () -> {return new double[] { driveSub.modules[3].position(), driveSub.modules[3].totalDistanceTraveled() };});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("Robot", () -> {return new double[] {robotX, robotY};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("deltaRobot", () -> {return new double[] {deltaRobotX, deltaRobotY};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("flMotor", () -> {return new double[] {deltaCoordinates[0][0], deltaCoordinates[0][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("frMotor", () -> {return new double[] {deltaCoordinates[1][0], deltaCoordinates[1][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("blMotor", () -> {return new double[] {deltaCoordinates[2][0], deltaCoordinates[2][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("brMotor", () -> {return new double[] {deltaCoordinates[3][0], deltaCoordinates[3][1]};});
-    Shuffleboard.getTab("Kinematics").addDoubleArray("miscMotor", () -> {return new double[] {miscDeltaDistance};});
-    gyro.reset();
+    // Shuffleboard.getTab("Navigation").addDoubleArray("Rotation", () -> {return new double[] { getGyroAngle() };});
+    // Shuffleboard.getTab("Navigation").addDoubleArray("Sensitivity", () -> {return new double[] { sensitivity };});
+    // Shuffleboard.getTab("Encoders").addDoubleArray("flMotor", () -> {return new double[] { driveSub.modules[0].CANCoderPositionAdjusted(), driveSub.modules[0].distanceEncoderPosition() };});
+    // Shuffleboard.getTab("Encoders").addDoubleArray("frMotor", () -> {return new double[] { driveSub.modules[1].CANCoderPositionAdjusted(), driveSub.modules[1].distanceEncoderPosition() };});
+    // Shuffleboard.getTab("Encoders").addDoubleArray("blMotor", () -> {return new double[] { driveSub.modules[2].CANCoderPositionAdjusted(), driveSub.modules[2].distanceEncoderPosition() };});
+    // Shuffleboard.getTab("Encoders").addDoubleArray("brMotor", () -> {return new double[] { driveSub.modules[3].CANCoderPositionAdjusted(), driveSub.modules[3].distanceEncoderPosition() };});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("Robot", () -> {return new double[] {robotX, robotY};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("deltaRobot", () -> {return new double[] {deltaRobotX, deltaRobotY};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("flMotor", () -> {return new double[] {deltaCoordinates[0][0], deltaCoordinates[0][1]};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("frMotor", () -> {return new double[] {deltaCoordinates[1][0], deltaCoordinates[1][1]};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("blMotor", () -> {return new double[] {deltaCoordinates[2][0], deltaCoordinates[2][1]};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("brMotor", () -> {return new double[] {deltaCoordinates[3][0], deltaCoordinates[3][1]};});
+    // Shuffleboard.getTab("Kinematics").addDoubleArray("miscMotor", () -> {return new double[] {miscDeltaDistance};});
+    // gyro.reset();
   }
 
   @Override
@@ -55,11 +57,11 @@ public class NavigationSubsystem extends SubsystemBase {
     deltaRobotX = 0;
     deltaRobotY = 0;
     for (SwerveDriveModule module : driveSub.modules) {
-      double deltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
-      miscDeltaDistance = module.totalDistanceTraveled() - previousDistanceValues[i];
-      previousDistanceValues[i] = module.totalDistanceTraveled();
-      deltaCoordinates[i][0] = deltaDistance * Math.cos(module.position() - getGyroAngle() );
-      deltaCoordinates[i][1] = deltaDistance * Math.sin(module.position() - getGyroAngle() );
+      double deltaDistance = module.distanceEncoderPosition() - previousDistanceValues[i];
+      miscDeltaDistance = module.distanceEncoderPosition() - previousDistanceValues[i];
+      previousDistanceValues[i] = module.distanceEncoderPosition();
+      deltaCoordinates[i][0] = deltaDistance * Math.cos(-module.canCoderPositionAdjusted() - getGyroAngle() );
+      deltaCoordinates[i][1] = deltaDistance * Math.sin(-module.canCoderPositionAdjusted() - getGyroAngle() );
       deltaRobotX += deltaCoordinates[i][0];
       deltaRobotY += deltaCoordinates[i][1];
       i++;
@@ -94,9 +96,22 @@ public class NavigationSubsystem extends SubsystemBase {
   public double averageDistanceTraveled() {
     double averageDistance = 0;
     for (SwerveDriveModule module : driveSub.modules) {
-      averageDistance += module.totalDistanceTraveled();
+      averageDistance += Math.abs(module.distanceEncoderPosition());
     }
-    averageDistance /= 4;
+    averageDistance = 26.775 * averageDistance/4;
     return averageDistance;
+  }
+
+  public void resetGyro() {
+    gyro.reset();
+  }
+
+  public void resetPosition() {
+    robotX = 0;
+    robotY = 0;
+  }
+
+  public void displayVariables(double sense) {
+    sensitivity = sense;
   }
 }

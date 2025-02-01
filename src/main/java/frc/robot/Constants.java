@@ -18,6 +18,8 @@ public final class Constants {
   public static final int kDriverControllerPort = 0;
   //Measurements of robot
   public static final double DistanceBetweenWheels = 0.616;
+  public static final double WheelCircumference =  Math.PI * 0.1016;
+
   //MotorType of our Neos & PWMs
   public static final MotorType motorType = MotorType.kBrushless;
   //CANIDs for Swerve Modules

@@ -8,9 +8,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Information.NavigationSubsystem;
+import frc.robot.Information.OdometrySubsystem;
 import frc.robot.SwerveSubsystems.DriveSubsystem;
 
-public class DrivePolarCommand extends Command {
+public class PolarMoveCommand extends Command {
 
   double radians;
   double distance;
@@ -19,33 +20,34 @@ public class DrivePolarCommand extends Command {
   final double tolerance = 0.1;     //Tolerance of fianl position coordinate in meters
   double speed;
   PIDController pid = new PIDController(0.63, 0, 0);
-  NavigationSubsystem navSub;
+  OdometrySubsystem odomSub;
   
 
   /** Creates a new MovePolarCommand. */
-  public DrivePolarCommand(double radians, double distance, DriveSubsystem driveSubsystem) {
+  public PolarMoveCommand(double radians, double distance, DriveSubsystem driveSubsystem, OdometrySubsystem odomSub) {
     addRequirements(driveSubsystem);
     this.radians = radians;
     this.distance = distance;
     this.driveSubsystem = driveSubsystem;
-    navSub = driveSubsystem.navSub;
+    this.odomSub = odomSub;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    pid.setSetpoint(0);
+    pid.setSetpoint(distance);
     pid.setTolerance(tolerance);
-    initDistance = navSub.averageDistanceTraveled();
+    initDistance = Math.sqrt(Math.pow(odomSub.getX(), 2)+Math.pow(odomSub.getY(), 2));
   }
 
   // Called every time the schetduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double totalDistanceTraveled = navSub.averageDistanceTraveled();
+    double currentDistance = Math.sqrt(Math.pow(odomSub.getX(), 2)+Math.pow(odomSub.getY(), 2));
+    double distanceDifference = Math.abs(currentDistance - initDistance);
 
-    speed = MathUtil.clamp(-pid.calculate(distance), -0.3, 0.3);
-    // System.out.println(distance + " , " + differenceX + " , " + differenceY);
+    speed = MathUtil.clamp(pid.calculate(distanceDifference), -0.15, 0.15);
+    System.out.println(distance + " , " + initDistance + " , " + currentDistance + " , " +distanceDifference);
     driveSubsystem.directionalDrive(speed, radians);
   }
 

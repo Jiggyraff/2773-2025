@@ -21,13 +21,12 @@ public class DriveSubsystem extends SubsystemBase {
   public double i = 0.0;
   public double d = 0.0;
 
-  public NavigationSubsystem navSub;
   
   public SwerveModulePosition[] getPositions()
   {
     return new SwerveModulePosition[] {
-    flMotor.getMotorEncoderPosition(), frMotor.getMotorEncoderPosition(),
-    blMotor.getMotorEncoderPosition(), brMotor.getMotorEncoderPosition()
+    flMotor.getSwervePosition(), frMotor.getSwervePosition(),
+    blMotor.getSwervePosition(), brMotor.getSwervePosition()
   };
   }
 
@@ -38,9 +37,8 @@ public class DriveSubsystem extends SubsystemBase {
   // boolean initDone = false;
 
   /** Creates a new TestSubsystem. */
-  public DriveSubsystem(NavigationSubsystem navSub) {
+  public DriveSubsystem() {
     Shuffleboard.getTab("Navigation").addDoubleArray("Set Angle gilcswdicqewe", () -> {return new double[] {setAngle};});
-    this.navSub = navSub;
   }
 
 

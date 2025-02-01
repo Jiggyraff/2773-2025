@@ -18,9 +18,9 @@ public class RotateRadiansCommand extends Command {
 
   PIDController rotatePID = new PIDController(0.63, 0, 0);
 
-  public RotateRadiansCommand(double radians, NavigationSubsystem navigationSubsystem, DriveSubsystem driveSubsystem) {
-    addRequirements(navigationSubsystem, driveSubsystem);
-    this.navSub = navigationSubsystem;
+  public RotateRadiansCommand(double radians, NavigationSubsystem navSub, DriveSubsystem driveSubsystem) {
+    addRequirements(navSub, driveSubsystem);
+    this.navSub = navSub;
     this.driveSub = driveSubsystem;
     this.radians = radians;
   }
@@ -28,7 +28,7 @@ public class RotateRadiansCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    radians += driveSub.navSub.getGyroAngle();
+    radians += navSub.getGyroAngle();
     rotatePID.setSetpoint(radians);
     rotatePID.setTolerance(0.01);
     System.out.println();

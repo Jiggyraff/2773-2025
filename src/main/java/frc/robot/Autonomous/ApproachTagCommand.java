@@ -36,13 +36,16 @@ public class ApproachTagCommand extends Command {
   public void execute() {
     if (data.alpha > 0.1) {
       driveSub.directionalDrive(0.3, 0, 0);
+      System.out.println("Driving right");
     }
     if (data.alpha < -0.1) {
       driveSub.directionalDrive(0.3, Math.PI, 0);
+      System.out.println("Driving left");
     }
     if (Math.abs(data.alpha) < 0.1) {
       if (-data.z > 1) {
         driveSub.directionalDrive(0.3, Math.PI/2, 0);
+        System.out.println("Driving forward");
       }
     }
     

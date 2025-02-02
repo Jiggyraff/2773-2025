@@ -11,6 +11,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import frc.robot.Constants;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -23,57 +24,37 @@ public class SwerveDriveModule {
   public SparkMax rotateMotor;
   public CANcoder encoder;
   public RelativeEncoder distanceEncoder;
-  public RelativeEncoder rotationEncoder;
   public int id;
   public double alpha;
   private PIDController pidRotate;
+
+  private static double DriveMotorWheelGearRatio = 1.0 / 6.75;
+  private static double EncoderMagicRevolutionNumber = 0.0435;
 
   public SwerveDriveModule(int driveId, int rotateId, int encoderId, double alpha) {
     driveMotor = new SparkMax(driveId, frc.robot.Constants.motorType);
     rotateMotor = new SparkMax(rotateId, frc.robot.Constants.motorType);
     encoder = new CANcoder(encoderId);
     distanceEncoder = driveMotor.getEncoder();
-    rotationEncoder = rotateMotor.getEncoder();
-    rotationEncoder.setPosition(position());
     id = encoderId;
     this.alpha = alpha;
     this.pidRotate = new PIDController(0.30, 0, 0);
     distanceEncoder.setPosition(0);
   }
 
-  public double angleAdjustedRadians() {
-    double rawAngle = encoder.getPosition().getValueAsDouble() * 2 * Math.PI;
-    while (rawAngle > Math.PI) {
-      rawAngle -= (2 * Math.PI);
-    }
-    while (rawAngle < -Math.PI) {
-      rawAngle += (2 * Math.PI);
-    }
-    return rawAngle;
-  }
-
   public double distanceEncoderPosition() {
-    return distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254;
+    return distanceEncoder.getPosition() / EncoderMagicRevolutionNumber * DriveMotorWheelGearRatio
+        * Constants.WheelCircumference;
   }
 
-  public double rotationEncoderPosition() {
-    return rotationEncoder.getPosition() * (1.0/21) * 2 * Math.PI;
-  }
-  
   public void drive(double speed, double rotate) {
     driveMotor.set(speed);
     rotateMotor.set(rotate);
-    System.out.println(id + " " + distanceEncoder.getPosition());
   }
 
-  public SwerveModulePosition getMotorEncoderPosition() {
-    return new SwerveModulePosition(
-        distanceEncoder.getPosition(), new Rotation2d(-rotationEncoder.getPosition()));
-  }
-  
   public void directionalDrive(double speed, double angle) {
     pidRotate.setSetpoint(0);
-    double pos = -position() - angle;
+    double pos = canCoderPositionAdjusted() - angle;
     while (pos < -Math.PI)
       pos += 2 * Math.PI;
     while (pos >= Math.PI)
@@ -96,27 +77,19 @@ public class SwerveDriveModule {
     driveMotor.set(speed * direction);
   }
 
-  public double position() {
+  public double canCoderPositionAdjusted() {
     // position [-0.5..0.5)
     double value = encoder.getAbsolutePosition().getValueAsDouble() - alpha;
     if (value < -0.5)
       value += 1.0;
     if (value >= 0.5)
       value -= 1.0;
-    return value * 2 * Math.PI;
-  }
-
-  public double totalDistanceTraveled() {
-    return distanceEncoder.getPosition() * (1/6.75) * 2 * Math.PI * 4 * 0.0254;
-  }
-
-  public double rawPosition() {
-    return encoder.getAbsolutePosition().getValueAsDouble();
+    return -value * 2 * Math.PI;
   }
 
   public void reset() {
     pidRotate.setSetpoint(0);
-    double s = pidRotate.calculate(-position());
+    double s = pidRotate.calculate(canCoderPositionAdjusted());
     s = MathUtil.clamp(s, -ROTATION_LIMIT_SPEED, ROTATION_LIMIT_SPEED);
     rotateMotor.set(s);
   }
@@ -128,5 +101,10 @@ public class SwerveDriveModule {
 
   public void setPIDValues(double p, double i, double d) {
     pidRotate.setPID(p, i, d);
+  }
+
+  public SwerveModulePosition getSwervePosition() {
+    return new SwerveModulePosition(
+        distanceEncoderPosition(), new Rotation2d(canCoderPositionAdjusted()));
   }
 }

@@ -33,11 +33,10 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     
     //Subsystem state variables
-    private Boolean isEnabled = false;     //Deactivates everything
+    private Boolean isEnabled = true;     //Deactivates everything
     private Boolean syncTags = true;       //Stops feeding to nav
     private Boolean cautiousMode = false;  //Checks if the data *could* be reliable based off parameters
-    private double alphaTolerance = 0.05;
-    private double distanceTolerance = 1;
+    private double alphaTolerance = 0.1;
 
     //Tag Data Stuff
     TagData lastTag;
@@ -91,7 +90,7 @@ public class TagSubsystem extends SubsystemBase {
 
 
     public TagSubsystem(OdometrySubsystem odomSub) {
-        syncTags = false;
+        syncTags = true;
         this.odomSub = odomSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
@@ -106,6 +105,7 @@ public class TagSubsystem extends SubsystemBase {
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {return data != null ? new double[] {data.y} : new double[]{};});
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {return data != null ? new double[] {data.z} : new double[]{};});
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
+        Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
     }
 
     @Override
@@ -143,14 +143,15 @@ public class TagSubsystem extends SubsystemBase {
         return lastTag;
     }
 
+    public double laserDistance = 0.0;
     private void updateOdometry(TagData data) {
-        if (!cautiousMode || (-alphaTolerance < data.alpha && data.alpha < alphaTolerance && -distanceTolerance < -data.z && -data.z < distanceTolerance)) {
+        if (-alphaTolerance < data.alpha && data.alpha < alphaTolerance && laserDistance != -1) {
             double angleFromHorizontal = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180;
-            double x = -data.z*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1] * 0.0254;
-            double y =  data.x*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2] * 0.0254;
+            double x = laserDistance*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1] * 0.0254;
+            double y = laserDistance*Math.sin(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2] * 0.0254;
             double radians = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180 - Math.PI - data.alpha;
             odomSub.setXY(x, y, radians);
-            // System.out.println("X:" + x + "Y:" + y + "Alpha:" + data.alpha);
+            System.out.println(laserDistance*Math.cos(angleFromHorizontal));
         }
     }
 
@@ -224,13 +225,13 @@ public class TagSubsystem extends SubsystemBase {
         lastAprilTagData[dataToUpdate.aprilTagID] = dataToUpdate;
     }
 
-    public int getSpeakerTagID()
-    {
-        if(DriverStation.getAlliance().equals(Alliance.Red)) {
-            return Constants.speakerTagIDRed;
-        }
-        else return Constants.speakerTagIDBlue;
-    }
+    // public int getSpeakerTagID()
+    // {
+    //     if(DriverStation.getAlliance().equals(Alliance.Red)) {
+    //         return Constants.speakerTagIDRed;
+    //     }
+    //     else return Constants.speakerTagIDBlue;
+    // }
     public double getLastSpeakerDistance()
     {
         // TagData tempData = getAprilTag(getSpeakerTagID());
@@ -258,6 +259,31 @@ public class TagSubsystem extends SubsystemBase {
         } else {
             cautiousMode = true;
             System.out.println("Cautious mode on");
+        }
+    }
+
+    double[] laserSum = new double[10];
+    int laserN = 0;
+    public void setDistance(double d) {
+        if (laserN != 10) {
+            laserSum[laserN] = d;
+            laserN++;
+        } else {
+            double laserAverage = 0.0;
+            double laserAverage2 = 0.0;
+            for (int i = 0; i < laserSum.length;i++) {
+                laserAverage += laserSum[i];
+            }
+            laserAverage /= 10;
+            int n = 0;
+            for (int i = 0; i < laserSum.length; i++) {
+                if (laserSum[i] > laserAverage) {
+                    laserAverage2 += laserSum[i];
+                    n++;
+                }
+            }
+            laserAverage2 /= n;
+            laserDistance = laserAverage2/1000;
         }
     }
 }

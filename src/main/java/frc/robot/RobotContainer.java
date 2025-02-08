@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
+import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.PolarMoveCommand;
+import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
@@ -36,21 +38,23 @@ public class RobotContainer {
   // Controllers
   Joystick hotaz = new Joystick(0);
   
-  XboxController secondController = new XboxController(1);
+  // XboxController secondController = new XboxController(1);
   
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
-  NavigationSubsystem navSub = new NavigationSubsystem(driveSub);
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
   TagSubsystem tagSub = new TagSubsystem(odomSub);
+  LaserSubsystem navSub = new LaserSubsystem(driveSub, tagSub);
   
   // Commands from files
-  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, secondController, navSub, tagSub, odomSub);
+  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, navSub, tagSub, odomSub);
 
   
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
-  RotateToCommand rotateToCommand = new RotateToCommand(Math.PI/2, driveSub, navSub);
+  RotateToCommand rotateToCommand = new RotateToCommand(Math.PI, driveSub, odomSub);
   PolarMoveCommand polarMove = new PolarMoveCommand(-(3/4)*Math.PI, 1, driveSub, odomSub);
+  RotateToRadiansCommand rotateToZero = new RotateToRadiansCommand(0, odomSub, driveSub);
+  RotateToRadiansCommand rotateToFlank = new RotateToRadiansCommand(Math.PI, odomSub, driveSub);
   SequentialCommandGroup triangle = 
     new PolarMoveCommand(-Math.PI/4, 1, driveSub, odomSub
   ).andThen(
@@ -69,6 +73,43 @@ public class RobotContainer {
   ).andThen(
     new PolarMoveCommand(-Math.PI, 1, driveSub, odomSub)
   ));
+  SequentialCommandGroup plus = 
+    new PolarMoveCommand(0, 0.5, driveSub, odomSub
+  ).andThen(
+    new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(Math.PI/2, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(3*Math.PI/2, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(0, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(3*Math.PI/2, 0.5, driveSub, odomSub)
+  ).andThen(
+    new PolarMoveCommand(Math.PI/2, 0.5, driveSub, odomSub)
+  );
+
+  SequentialCommandGroup plusPlus = 
+    new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub
+  ).andThen(
+    new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub)
+  ).andThen(
+    new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub)
+  );
+
+  DeltaPoseCommand firstQuadrantPos = new DeltaPoseCommand(1, 1, 0, driveSub, odomSub);
   //Buttons
   //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -81,6 +122,6 @@ public class RobotContainer {
     driveSub.setDefaultCommand(driveCommand);
   }
   public Command getAutonomousCommand() {
-    return tagCommand;
+    return rotateToFlank;
   }
 }

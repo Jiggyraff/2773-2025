@@ -38,6 +38,7 @@ public class OdometrySubsystem extends SubsystemBase {
     Field2d field = new Field2d();
 
     public OdometrySubsystem(DriveSubsystem driveSub) {
+        gyro.reset();
         this.driveSub = driveSub;
         modules = driveSub.modules;
         m_odometry = new SwerveDriveOdometry(
@@ -51,6 +52,8 @@ public class OdometrySubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Y", pose.getY());
     }
     
+    // double oldY;
+    // double oldX;
     @Override
     public void periodic() {
         Rotation2d gyroAngle = new Rotation2d(gyro.getAngle() * Math.PI / 180);
@@ -59,7 +62,23 @@ public class OdometrySubsystem extends SubsystemBase {
         // System.out.println(pose.getX() + ", " + pose.getY() + " " +
         field.setRobotPose(pose);
         SmartDashboard.putData("Field", field);
+        // var dx = (getX() - oldX); var dy = (getY() - oldY);
+        // var dc =Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+        // System.out.println( dx + ", " + dy + " : " + dc);
+        // oldY = getY();
+        // oldX = getX();
     }
+
+    public double getGyroAngle() {
+        double angle = (gyro.getAngle() - 0) / 180.0 * Math.PI;
+        while (angle > Math.PI) {
+          angle -= Math.PI * 2;
+        }
+        while (angle < -Math.PI) {
+          angle += Math.PI*2;
+        }
+        return angle;
+      }
 
     public Pose2d getPose() {
         return pose;
@@ -75,5 +94,9 @@ public class OdometrySubsystem extends SubsystemBase {
     public void setXY(double x, double y, double rotation) {
         pose = new Pose2d(x, y, new Rotation2d(rotation));
         m_odometry.resetPose(pose);
+    }
+
+    public void resetGyro() {
+        gyro.reset();
     }
 }

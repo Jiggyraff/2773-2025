@@ -18,69 +18,79 @@ import frc.robot.Constants;
 public class HOTASDriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
   private final Joystick hotas;
-  private final XboxController secondController;
-  private final NavigationSubsystem navSub;
+  private final LaserSubsystem navSub;
   private final TagSubsystem tagSub;
   private final OdometrySubsystem odomSub;
+  private PIDController pid;
+  private PIDController rotatePID = new PIDController(0.63, 0, 0);
 
   private double setAngle;
 
   /** Creates a new DriveCommand. */
-  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, XboxController armStick, NavigationSubsystem navSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
+  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, LaserSubsystem navSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
     this.driveSubsystem = driveSub;
     this.hotas = hotas;
-    this.secondController = armStick;
     this.navSub = navSub;
     this.tagSub = tagSub;
     this.odomSub = odomSub;
+    this.pid = driveSub.getPID();
     addRequirements(driveSub);
   }
   
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    setAngle = navSub.getGyroAngle();
+    setAngle = odomSub.getGyroAngle();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
+  double oldT = 0.0;
+  double oldG = 0.0;
   @Override
   public void execute() {
     buttonMicroCommands();
     double x = hotas.getX(), y = hotas.getY();
     double angle = Math.atan2(y, x);
-    double gyroAngle = navSub.getGyroAngle();
+    double gyroAngle = odomSub.getGyroAngle();
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double speed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier * sensitivity;
-    navSub.displayVariables(sensitivity);
+    double setSpeed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier * sensitivity;
+    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone)) * sensitivity * Constants.RotateSpeedMultiplier;
+    // System.out.println(driveSubsystem.blMotor.distanceEncoderPosition() - oldT);
+          
+    pid.setSetpoint(setSpeed);
+    double speed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24);
+    pid.setSetpoint(setRotation);
+    double rspeed = pid.calculate(((odomSub.getGyroAngle()-oldG))*2289);
 
-    double r = (MathUtil.applyDeadband(hotas.getZ() + secondController.getLeftX(), Constants.HOTASRotationDeadzone)) * sensitivity;
+    // System.out.println(speed);
 
-    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(r)/sensitivity < Constants.HOTASRotationDeadzone) {
+
+    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(setRotation)/sensitivity < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
-      if (Math.abs(r) > 0) {
-        setAngle = navSub.getGyroAngle();
+      if (Math.abs(setRotation) > 0) {
+        setAngle = odomSub.getGyroAngle();
       }
-      driveSubsystem.directionalDrive(speed, angle - gyroAngle, Constants.RotateSpeedMultiplier * r);
+      driveSubsystem.directionalDrive(speed, angle - gyroAngle, setRotation);
     }
-        
-
+    oldT = driveSubsystem.averageDistanceEncoder();
+    oldG = odomSub.getGyroAngle();
   }
 
-  public double calculateRotation() {
-    PIDController rotatePID = new PIDController(0.1, 0, 0);
-    rotatePID.setSetpoint(setAngle);
-    // System.out.println(rotatePID.calculate(navSub.getGyroAngle()));
-    return MathUtil.clamp(rotatePID.calculate(navSub.getGyroAngle())*100, -Constants.RotateSpeedMultiplier, Constants.RotateSpeedMultiplier);
-  }
+  // public double calculateRotation() {
+  //   PIDController rotatePID = new PIDController(0.1, 0, 0);
+  //   rotatePID.setSetpoint(setAngle);
+  //   // System.out.println(rotatePID.calculate(odomSub.getGyroAngle()));
+  //   return MathUtil.clamp(rotatePID.calculate(odomSub.getGyroAngle())*100, -Constants.RotateSpeedMultiplier, Constants.RotateSpeedMultiplier);
+  // }
 
   public void buttonMicroCommands() {
     if (buttonPressed(7) && buttonOnPress(12)) {
-      navSub.resetGyro();
+      odomSub.resetGyro();
       System.out.println("Gyro Reset Manually");
     }
     if (buttonPressed(7) && buttonOnPress(11)) {
-      odomSub.setXY(0,0,navSub.getGyroAngle());
+      odomSub.setXY(0,0,odomSub.getGyroAngle());
       System.out.println("Position Reset Manually");
     }
     if (buttonPressed(7) && buttonOnPress(9)) {
@@ -88,6 +98,12 @@ public class HOTASDriveCommand extends Command {
     }
     if (buttonPressed(7) && buttonOnPress(10)) {
       tagSub.cautiousMode();
+    }
+    if (buttonPressed(5)) {
+      driveSubsystem.increasePBy(0.5);
+    }
+    if (buttonPressed(3)) {
+      driveSubsystem.increasePBy(-0.5);
     }
   }
 

@@ -6,21 +6,23 @@ package frc.robot.Autonomous;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Information.NavigationSubsystem;
+import frc.robot.Information.LaserSubsystem;
+import frc.robot.Information.OdometrySubsystem;
 import frc.robot.SwerveSubsystems.*;
 
-public class RotateRadiansCommand extends Command {
+public class RotateToRadiansCommand extends Command {
 
-  NavigationSubsystem navSub;
+  OdometrySubsystem odomSub;
   DriveSubsystem driveSub;
   double radians;
 
   PIDController rotatePID = new PIDController(0.63, 0, 0);
 
-  public RotateRadiansCommand(double radians, NavigationSubsystem navSub, DriveSubsystem driveSubsystem) {
-    addRequirements(navSub, driveSubsystem);
-    this.navSub = navSub;
+  public RotateToRadiansCommand(double radians, OdometrySubsystem odomSub, DriveSubsystem driveSubsystem) {
+    addRequirements(odomSub, driveSubsystem);
+    this.odomSub = odomSub;
     this.driveSub = driveSubsystem;
     this.radians = radians;
   }
@@ -28,17 +30,16 @@ public class RotateRadiansCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    radians += navSub.getGyroAngle();
     rotatePID.setSetpoint(radians);
     rotatePID.setTolerance(0.01);
     System.out.println();
-    System.out.println("Rotate Robot Going To: " + radians + " , "  + (radians - navSub.getGyroAngle()));
+    System.out.println("Rotate Robot Going To: " + radians + " , "  + (radians - odomSub.getGyroAngle()));
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double speedOfRotation = rotatePID.calculate(navSub.getGyroAngle());
+    double speedOfRotation = rotatePID.calculate(odomSub.getGyroAngle());
     speedOfRotation = MathUtil.clamp(speedOfRotation, -0.3, 0.3);
     driveSub.rotate(speedOfRotation);
   }
@@ -47,7 +48,7 @@ public class RotateRadiansCommand extends Command {
   @Override
   public void end(boolean interrupted) {
     driveSub.stop();
-    System.out.println("Rotate Robot Ended At:" + navSub.getGyroAngle());
+    System.out.println("Rotate Robot Ended At:" + odomSub.getGyroAngle());
     System.out.println();
   }
 

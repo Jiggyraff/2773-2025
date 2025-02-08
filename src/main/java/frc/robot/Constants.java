@@ -47,5 +47,5 @@ public final class Constants {
   
   public static final double ControllerDeadzone = 0.1;
   public static final double HOTASDeadzone = 0.1;
-  public static final double HOTASRotationDeadzone = 0.5;
+  public static final double HOTASRotationDeadzone = 0.3;
 }

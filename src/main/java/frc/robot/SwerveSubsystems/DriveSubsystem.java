@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Information.NavigationSubsystem;
+import frc.robot.Information.LaserSubsystem;
 import edu.wpi.first.math.controller.PIDController;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -18,8 +18,9 @@ public class DriveSubsystem extends SubsystemBase {
   public SwerveDriveModule flMotor = new SwerveDriveModule(Constants.frontLeftModuleDriveCANID, Constants.frontLeftModuleRotateCANID, Constants.frontLeftModuleEncoderCANID, 0.35522);
   public double setAngle;
   public double p = 0.63;
-  public double i = 0.0;
-  public double d = 0.0;
+  public double i = 0;
+  public double d = 0;
+  public PIDController pid = new PIDController(p, i, d);
 
   
   public SwerveModulePosition[] getPositions()
@@ -157,4 +158,17 @@ public class DriveSubsystem extends SubsystemBase {
   public double getP() {
     return p;
   }
+
+public PIDController getPID() {
+    return pid;
+}
+
+  public double averageDistanceEncoder() {
+    return (flMotor.distanceEncoderPosition()+frMotor.distanceEncoderPosition()+blMotor.distanceEncoderPosition()+brMotor.distanceEncoderPosition())/4;
+  }
+
+public void increasePBy(double e) {
+    pid.setP(pid.getP() + e);
+    System.out.println("PID set to:"+pid.getP());
+}
 }

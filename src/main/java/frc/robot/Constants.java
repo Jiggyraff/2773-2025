@@ -39,8 +39,8 @@ public final class Constants {
         public static final int backLeftModuleEncoderCANID = 54;
         public static final int backRightModuleEncoderCANID = 55;
     
-        public static final double DriveSpeedMultiplier = 0.8;
-        public static final double RotateSpeedMultiplier = 0.3;
+        public static final double MaxDriveSpeed = 0.6;
+        public static final double MaxRotationSpeed = 0.20;
   //Soft limitations
   public static final double maxWheelSpeed = 1.0; //meters per second
 

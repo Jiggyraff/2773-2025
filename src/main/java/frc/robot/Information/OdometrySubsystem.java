@@ -46,8 +46,8 @@ public class OdometrySubsystem extends SubsystemBase {
                 driveSub.getPositions(),
                 new Pose2d(0.0, 0.0, new Rotation2d()));
 
-        Shuffleboard.getTab("Odometry").addDouble("Robot X", () -> {return pose.getX();});
-        Shuffleboard.getTab("Odometry").addDouble("Robot Y", () -> {return pose.getY();});
+        Shuffleboard.getTab("Odometry").addDouble("Robot X", () -> {return getX();});
+        Shuffleboard.getTab("Odometry").addDouble("Robot Y", () -> {return getY();});
         SmartDashboard.putNumber("X", pose.getX());
         SmartDashboard.putNumber("Y", pose.getY());
     }
@@ -88,7 +88,7 @@ public class OdometrySubsystem extends SubsystemBase {
     }
 
     public double getY() {
-        return pose.getY();
+        return -pose.getY();
     }
 
     public void setXY(double x, double y, double rotation) {

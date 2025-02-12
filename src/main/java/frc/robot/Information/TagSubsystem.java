@@ -33,7 +33,7 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     
     //Subsystem state variables
-    private Boolean isEnabled = true;     //Deactivates everything
+    private Boolean isEnabled = false;     //Deactivates everything
     private Boolean syncTags = true;       //Stops feeding to nav
     private Boolean cautiousMode = false;  //Checks if the data *could* be reliable based off parameters
     private double alphaTolerance = 0.1;

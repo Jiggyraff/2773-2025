@@ -53,8 +53,8 @@ public class HOTASDriveCommand extends Command {
     double angle = Math.atan2(y, x);
     double gyroAngle = odomSub.getGyroAngle();
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double setSpeed = Math.sqrt(x * x + y * y) * Constants.DriveSpeedMultiplier * sensitivity;
-    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone)) * sensitivity * Constants.RotateSpeedMultiplier;
+    double setSpeed = Math.sqrt(x * x + y * y) * Constants.MaxDriveSpeed * sensitivity;
+    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
     // System.out.println(driveSubsystem.blMotor.distanceEncoderPosition() - oldT);
           
     pid.setSetpoint(setSpeed);

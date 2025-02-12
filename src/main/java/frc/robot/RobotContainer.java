@@ -109,7 +109,11 @@ public class RobotContainer {
     new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub)
   );
 
-  DeltaPoseCommand firstQuadrantPos = new DeltaPoseCommand(1, 1, 0, driveSub, odomSub);
+  SequentialCommandGroup firstQuadrantPos = new DeltaPoseCommand(3, 0, Math.PI, driveSub, odomSub).andThen(
+    new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
+      new DeltaPoseCommand(-2, 0, -Math.PI/2, driveSub, odomSub)
+    )
+  );
   //Buttons
   //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -122,6 +126,6 @@ public class RobotContainer {
     driveSub.setDefaultCommand(driveCommand);
   }
   public Command getAutonomousCommand() {
-    return rotateToFlank;
+    return firstQuadrantPos;
   }
 }

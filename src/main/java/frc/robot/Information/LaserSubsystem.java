@@ -13,9 +13,14 @@ import edu.wpi.first.wpilibj.SerialPort;
 import java.lang.reflect.Type;
 import java.nio.channels.DatagramChannel;
 
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkMax;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.I2C;
@@ -30,6 +35,7 @@ public class LaserSubsystem extends SubsystemBase {
   
   DriveSubsystem driveSub;
   TagSubsystem tagSub;
+  OdometrySubsystem odomSub;
 
 
   public AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
@@ -40,12 +46,14 @@ public class LaserSubsystem extends SubsystemBase {
   //Misc Variables
   private SerialPort arduino;
   private StringBuilder receivedData; // Use StringBuilder for efficient string building
+  SparkMax motor = new SparkMax(14, frc.robot.Constants.motorType);
 
   
   
   /** Creates a new KinematicsSubsystem. */
-  public LaserSubsystem(DriveSubsystem driveSub, TagSubsystem tagSub) {
+  public LaserSubsystem(DriveSubsystem driveSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
     Shuffleboard.getTab("Odometry").addDouble("Laser Distance (mm)", () -> {return laserDistance;});
+    Shuffleboard.getTab("Odometry").addDouble("Laser Motor (Radians)", () -> {return getMotorPosition();});
     try {
             arduino = new SerialPort(9600, SerialPort.Port.kUSB); // Match baud rate!
             receivedData = new StringBuilder();
@@ -55,12 +63,16 @@ public class LaserSubsystem extends SubsystemBase {
 
     this.driveSub = driveSub;
     this.tagSub = tagSub;
+    this.odomSub = odomSub;
   }
-  
+  RelativeEncoder encoder = motor.getEncoder();
+  double setAngle = 0;
+  PIDController pid = new PIDController(0.1, 0, 0);
   
   @Override
   public void periodic() {
-     try {
+    // if (arduino != null) {
+    try {
       // Check how many bytes are available to read
       int bytesAvailable = arduino.getBytesReceived();
       // System.out.println(bytesAvailable
@@ -83,17 +95,55 @@ public class LaserSubsystem extends SubsystemBase {
               tagSub.setDistance(laserDistance);
               // System.out.println("Sensor Value: " + sensorValue);
             } catch (NumberFormatException e) {
-                // System.err.println("Error parsing float: " + dataPoint);
+                // System.err.println("Error parsing float: " + completeMessage);
             }
           }
           receivedData.setLength(0); // Clear the StringBuilder for the next message
         }
             
 
-        } catch (Exception e) {
-            System.err.println("Error reading from serial port: " + e.getMessage());
-        }
-      }
+    } catch (Exception e) {
+        System.err.println("Error reading from serial port: " + e.getMessage());
+    }
+    // }
+    double angle = setAngle + odomSub.getGyroAngle();
+    while (angle > Math.PI) {
+      angle -= 2*Math.PI;
+    }
+    while (angle < -Math.PI) {
+      angle += 2*Math.PI;
+    }
+    setMotorPosition(angle);
+  }
+  
+  public void setAngleDifference(double d) {
+    setAngle = setAngle + d;
+  }
+
+  public double getMotorPosition() {
+    double d = (encoder.getPosition()/10)*Math.PI*2;
+    while (d > Math.PI) {
+      d -= 2*Math.PI;
+    }
+    while (d < -Math.PI) {
+      d += 2*Math.PI;
+    }
+    return d;
+  }
+
+          
+  private void setMotorPosition(double setAngle2) {
+    while (setAngle2 > Math.PI) {
+      setAngle2 -= 2*Math.PI;
+    }
+    while (setAngle2 < -Math.PI) {
+      setAngle2 += 2*Math.PI;
+    }
+    pid.setSetpoint(setAngle2);
+    double speed = MathUtil.clamp(pid.calculate(getMotorPosition()), -0.15, 0.15);
+    motor.set(speed);
+    // System.out.println("Position: " + getMotorPosition() + ", Set Angle: " + setAngle2);
+  }
 
   public Double getData() {
     byte[] data = new byte[MAX_BYTES];//create a byte array to hold the incoming data
@@ -112,5 +162,9 @@ public class LaserSubsystem extends SubsystemBase {
       return 0d;
     }
 
+  }
+
+  public void setEncoderZero() {
+    encoder.setPosition(0);
   }
 }

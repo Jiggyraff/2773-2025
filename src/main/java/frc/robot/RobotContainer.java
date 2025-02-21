@@ -16,8 +16,10 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
+import frc.SamSpaghettiCode.TowerSubsystem;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
+import frc.robot.Autonomous.LockOnTagCommand;
 import frc.robot.Autonomous.PolarMoveCommand;
 import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
@@ -44,10 +46,11 @@ public class RobotContainer {
   DriveSubsystem driveSub = new DriveSubsystem();
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
   TagSubsystem tagSub = new TagSubsystem(odomSub);
-  LaserSubsystem navSub = new LaserSubsystem(driveSub, tagSub);
+  LaserSubsystem laserSub = new LaserSubsystem(driveSub, tagSub, odomSub);
+  TowerSubsystem towerSub = new TowerSubsystem();
   
   // Commands from files
-  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, navSub, tagSub, odomSub);
+  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
 
   
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -114,6 +117,8 @@ public class RobotContainer {
       new DeltaPoseCommand(-2, 0, -Math.PI/2, driveSub, odomSub)
     )
   );
+
+  SequentialCommandGroup findAndApproachTag = new LockOnTagCommand(tagSub, laserSub).andThen();
   //Buttons
   //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -126,6 +131,6 @@ public class RobotContainer {
     driveSub.setDefaultCommand(driveCommand);
   }
   public Command getAutonomousCommand() {
-    return firstQuadrantPos;
+    return findAndApproachTag;
   }
 }

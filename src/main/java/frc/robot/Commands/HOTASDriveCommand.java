@@ -18,7 +18,7 @@ import frc.robot.Constants;
 public class HOTASDriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
   private final Joystick hotas;
-  private final LaserSubsystem navSub;
+  private final LaserSubsystem laserSub;
   private final TagSubsystem tagSub;
   private final OdometrySubsystem odomSub;
   private PIDController pid;
@@ -27,10 +27,10 @@ public class HOTASDriveCommand extends Command {
   private double setAngle;
 
   /** Creates a new DriveCommand. */
-  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, LaserSubsystem navSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
+  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, LaserSubsystem laserSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
     this.driveSubsystem = driveSub;
     this.hotas = hotas;
-    this.navSub = navSub;
+    this.laserSub = laserSub;
     this.tagSub = tagSub;
     this.odomSub = odomSub;
     this.pid = driveSub.getPID();
@@ -41,6 +41,7 @@ public class HOTASDriveCommand extends Command {
   @Override
   public void initialize() {
     setAngle = odomSub.getGyroAngle();
+    odomSub.resetGyro();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -53,25 +54,25 @@ public class HOTASDriveCommand extends Command {
     double angle = Math.atan2(y, x);
     double gyroAngle = odomSub.getGyroAngle();
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double setSpeed = Math.sqrt(x * x + y * y) * Constants.MaxDriveSpeed * sensitivity;
-    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+    double setSpeed = Math.sqrt(x * x + y * y);
+    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone));
     // System.out.println(driveSubsystem.blMotor.distanceEncoderPosition() - oldT);
           
     pid.setSetpoint(setSpeed);
-    double speed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24);
+    double speed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
     pid.setSetpoint(setRotation);
     double rspeed = pid.calculate(((odomSub.getGyroAngle()-oldG))*2289);
 
     // System.out.println(speed);
 
 
-    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(setRotation)/sensitivity < Constants.HOTASRotationDeadzone) {
+    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(setRotation) < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
       if (Math.abs(setRotation) > 0) {
         setAngle = odomSub.getGyroAngle();
       }
-      driveSubsystem.directionalDrive(speed, angle - gyroAngle, setRotation);
+      driveSubsystem.directionalDrive(speed, angle - gyroAngle, setRotation * sensitivity * Constants.MaxRotationSpeed);
     }
     oldT = driveSubsystem.averageDistanceEncoder();
     oldG = odomSub.getGyroAngle();
@@ -99,11 +100,15 @@ public class HOTASDriveCommand extends Command {
     if (buttonPressed(7) && buttonOnPress(10)) {
       tagSub.cautiousMode();
     }
-    if (buttonPressed(5)) {
-      driveSubsystem.increasePBy(0.5);
-    }
     if (buttonPressed(3)) {
-      driveSubsystem.increasePBy(-0.5);
+      laserSub.setAngleDifference(0.05);
+    }
+    if (buttonPressed(4)) {
+      laserSub.setAngleDifference(-0.05);
+    }
+    if (buttonPressed(7) && buttonOnPress(8)) {
+      laserSub.setEncoderZero();
+      System.out.println("Position Reset Manually");
     }
   }
 

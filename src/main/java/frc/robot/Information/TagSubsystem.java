@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -98,16 +99,17 @@ public class TagSubsystem extends SubsystemBase {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
             this.channel.configureBlocking(false);
-            this.isEnabled = true;
+            //this.isEnabled = true;
             } catch (IOException e) {
             e.printStackTrace();
         }
-        // Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {return data != null ? new double[] {data.aprilTagID} : new double[]{};});
-        // Shuffleboard.getTab("April Tag Data").addDoubleArray("X", () -> {return data != null ? new double[] {data.x} : new double[]{};});
-        // Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {return data != null ? new double[] {data.y} : new double[]{};});
-        // Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {return data != null ? new double[] {data.z} : new double[]{};});
-        // Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
-        // Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {return data != null ? new double[] {data.aprilTagID} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("X", () -> {return data != null ? new double[] {data.x} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Y", () -> {return data != null ? new double[] {data.y} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Z", () -> {return data != null ? new double[] {data.z} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
+        Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
+        Shuffleboard.getTab("April Tag Data").addBoolean("Sees Tag", () -> {return seesTag;});
     }
 
     @Override
@@ -118,9 +120,10 @@ public class TagSubsystem extends SubsystemBase {
     }
     
     TagData data;
+    int deadTimer = 0;
     private void receivePacket() {
         try {
-            System.out.println("Working");
+            // System.out.println("Working");
             if (channel.receive(buffer) != null) {
                 buffer.flip();
                 String rawText = new String(buffer.array(), buffer.arrayOffset(),
@@ -133,9 +136,13 @@ public class TagSubsystem extends SubsystemBase {
                     updateTags(data);
                     lastTag = data;
                     seesTag = true;
-                    System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
+                    // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
+                    deadTimer = 0;
                 } else {
-                    // System.out.println("No tag in sight");
+                    deadTimer++;
+                } 
+                if (deadTimer == 10) {
+                    System.out.println("No tag in sight");
                     seesTag = false;
                 }
                 buffer.clear();
@@ -177,16 +184,14 @@ public class TagSubsystem extends SubsystemBase {
         double[] tagInfo = aprilTagPositions[Integer.parseInt(apriltag)-1];
 
         double yRot = (-tagInfo[4] + 0) / 180.0 * Math.PI;
-        Matrix<N4,N4> tagMatrix = new Matrix<N4, N4>(N4.instance, N4.instance);
+        Matrix<N4,N4> tagMatrix = Matrix.eye(Nat.N4());
         tagMatrix.set(0,0, Math.sin(yRot));
         tagMatrix.set(0,2, Math.cos(yRot));
-        tagMatrix.set(1,1, 1.0);
         tagMatrix.set(2,0, Math.cos(yRot));
         tagMatrix.set(2,2, -Math.sin(yRot));
-        tagMatrix.set(3,3, 1.0);
         tagMatrix.set(0,3, -tagInfo[1]*0.0254);
         tagMatrix.set(1,3, -tagInfo[3]*0.0254);
-        tagMatrix.set(2,3, -tagInfo[2]*0.0254); 
+        tagMatrix.set(2,3, -tagInfo[2]*0.0254);
 
 
 
@@ -197,28 +202,29 @@ public class TagSubsystem extends SubsystemBase {
         double ZNum = Double.parseDouble(Num[2]);
 
         String[] MatrixNum = TagMatrix.split(" ");
-        Matrix<N4,N4> rotationMatrix = new Matrix<N4, N4>(N4.instance, N4.instance);
+        Matrix<N4,N4> rotationMatrix = Matrix.eye(Nat.N4());
         for (int i = 0; i < 3; i++ ) {
             for (int j = 0; j < 3; j++) {
                 rotationMatrix.set(i, j, Double.parseDouble(MatrixNum[i*3 + j]));
             }
         }
-        rotationMatrix.set(0, 3, XNum);
-        rotationMatrix.set(1, 3, YNum);
-        rotationMatrix.set(2, 3, ZNum);
-        rotationMatrix.set(3, 3, 1);
+        Matrix<N4,N4> trMatrix = Matrix.eye(Nat.N4());
+        trMatrix.set(0, 3, XNum);
+        trMatrix.set(1, 3, YNum);
+        trMatrix.set(2, 3, ZNum);
+        // System.out.println(rotationMatrix);
     
-        rotationMatrix = /*tagMatrix.times(*/rotationMatrix.inv()/*)*/;
+        var tagView = rotationMatrix.times(trMatrix).inv();  //A^(-1)
+        rotationMatrix = /*tagMatrix.times(*/tagView/*)*/;
         
-        
-        double sinAlpha = rotationMatrix.get(0,0);
-        double minusCosAlpha = rotationMatrix.get(0, 2);
+        double cosAlpha = rotationMatrix.get(0,0);
+        // System.out.println(tagView);
         
         TagData data = new TagData();
         data.x = rotationMatrix.get(0, 3);
         data.y = rotationMatrix.get(1, 3);
         data.z = rotationMatrix.get(2, 3);
-        data.alpha = Math.atan2(minusCosAlpha,sinAlpha);
+        data.alpha = Math.acos(cosAlpha);
         data.aprilTagID = Integer.parseInt(apriltag);
 
         if (syncTags) {

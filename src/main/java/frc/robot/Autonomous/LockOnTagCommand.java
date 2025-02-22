@@ -4,6 +4,8 @@
 
 package frc.robot.Autonomous;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Information.LaserSubsystem;
 import frc.robot.Information.TagSubsystem;
@@ -12,6 +14,7 @@ import frc.robot.Information.TagSubsystem;
 public class LockOnTagCommand extends Command {
   TagSubsystem tagSub;
   LaserSubsystem laserSub;
+  PIDController motorPID = new PIDController(0.63, 0, 0);
   /** Creates a new LockOnTagCommand. */
   public LockOnTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
     // Use addRequirements() here to declare subsystem dependencies.
@@ -23,16 +26,26 @@ public class LockOnTagCommand extends Command {
   @Override
   public void initialize() {
     tagSub.reset();
+    motorPID.setSetpoint(0);
     
   }
   
+  int c = 0;
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     if (!tagSub.getSeestag()) {
-      laserSub.setAngleDifference(0.05);
+      if (c > 5) {
+        laserSub.setAngleDifference(0.05);
+        c = 0;
+      }
+      c++;
       System.out.println(tagSub.getSeestag());
+    } else {
+      double speed = MathUtil.clamp(motorPID.calculate(tagSub.getXCom()), -0.05, 0.05);
+      laserSub.setAngleDifference(speed);
     }
+    
     
   }
 

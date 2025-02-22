@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
+import frc.SamSpaghettiCode.ClimberSubsystem;
 import frc.SamSpaghettiCode.TowerSubsystem;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
@@ -39,8 +40,7 @@ public class RobotContainer {
   //Auto chooser for Robot.java
   // Controllers
   Joystick hotaz = new Joystick(0);
-  
-  // XboxController secondController = new XboxController(1);
+  Joystick towerJoy = new Joystick(1);
   
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
@@ -48,9 +48,11 @@ public class RobotContainer {
   TagSubsystem tagSub = new TagSubsystem(odomSub);
   LaserSubsystem laserSub = new LaserSubsystem(driveSub, tagSub, odomSub);
   TowerSubsystem towerSub = new TowerSubsystem();
+  ClimberSubsystem climbSub = new ClimberSubsystem();
   
   // Commands from files
   HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
+  TowerControlCommand towerCommand = new TowerControlCommand(towerSub, climbSub, towerJoy);
 
   
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -129,6 +131,7 @@ public class RobotContainer {
   
   private void configureBindings() {
     driveSub.setDefaultCommand(driveCommand);
+    towerSub.setDefaultCommand(towerCommand);
   }
   public Command getAutonomousCommand() {
     return findAndApproachTag;

@@ -16,8 +16,6 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
-import frc.SamSpaghettiCode.ClimberSubsystem;
-import frc.SamSpaghettiCode.TowerSubsystem;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LockOnTagCommand;
@@ -26,6 +24,8 @@ import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
+import frc.robot.OtherSubsystems.ClimberSubsystem;
+import frc.robot.OtherSubsystems.TowerSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a

@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.SamSpaghettiCode;
+package frc.robot.OtherSubsystems;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
@@ -35,16 +35,20 @@ public class TowerSubsystem extends SubsystemBase {
     // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " + height);
   }
 
-  public void setHeight(double height) {
-    this.height = height;
+  public void setHeight(double d) {
+    height = MathUtil.clamp(d, -20, 0);
   }
 
   public void setDifferenceHeight(double d) {
     height += d;
   }
 
-  public void setProportionalHeight(double d) {
-      setHeight(-(d*10+10));
+  public void throttleControl(double d) {
+      setHeight(d*-10-10);
+  }
+
+  public void percentageHeight(double d) {
+    setHeight(d*-20);
   }
 
   public void zeroEncoders() {

@@ -99,4 +99,12 @@ public class OdometrySubsystem extends SubsystemBase {
     public void resetGyro() {
         gyro.reset();
     }
+
+    public double[] getSwerveAngles() {
+       double[] pos = new double[4];
+       for (int i = 0; i < 4; i++) {
+        pos[i] = modules[i].canCoderPositionAdjusted();
+       }
+       return pos;
+    }
 }

@@ -43,7 +43,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
 
-  public SwerveDriveModule[] modules = {flMotor, frMotor, blMotor, brMotor};
+  public SwerveDriveModule[] modules = {flMotor, blMotor, brMotor, frMotor};
 
   @Override
   public void periodic() {

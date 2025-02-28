@@ -5,11 +5,13 @@
 package frc.robot.SwerveSubsystems;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Information.LaserSubsystem;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 public class DriveSubsystem extends SubsystemBase {
   public SwerveDriveModule blMotor = new SwerveDriveModule(Constants.backLeftModuleDriveCANID, Constants.backLeftModuleRotateCANID, Constants.backLeftModuleEncoderCANID, 0.3686);
@@ -170,5 +172,13 @@ public PIDController getPID() {
 public void increasePBy(double e) {
     pid.setP(pid.getP() + e);
     System.out.println("PID set to:"+pid.getP());
+}
+
+public SwerveModuleState[] getStates() {
+  SwerveModuleState[] states = new SwerveModuleState[4];
+  for (int i = 0 ; i< 4; i++) {
+    states[i] = new SwerveModuleState(modules[i].distanceEncoder.getVelocity(), new Rotation2d(modules[i].canCoderPositionAdjusted()));
+  }
+  return states;
 }
 }

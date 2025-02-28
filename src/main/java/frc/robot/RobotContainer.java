@@ -19,6 +19,8 @@ import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LockOnTagCommand;
+import frc.robot.Autonomous.MoveElevatorCommand;
+import frc.robot.Autonomous.PerfectPoseDifferenceCommand;
 import frc.robot.Autonomous.PolarMoveCommand;
 import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
@@ -121,6 +123,10 @@ public class RobotContainer {
   );
 
   SequentialCommandGroup findAndApproachTag = new LockOnTagCommand(tagSub, laserSub).andThen();
+
+  MoveElevatorCommand moveElevatorMax = new MoveElevatorCommand(1, towerSub);
+
+  PerfectPoseDifferenceCommand ppCommand = new PerfectPoseDifferenceCommand(-0.5, 0.5, 0, driveSub, odomSub);
   //Buttons
   //driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -134,6 +140,6 @@ public class RobotContainer {
     towerSub.setDefaultCommand(towerCommand);
   }
   public Command getAutonomousCommand() {
-    return findAndApproachTag;
+    return ppCommand;
   }
 }

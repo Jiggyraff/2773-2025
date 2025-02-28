@@ -1,5 +1,6 @@
 package frc.robot.Information;
 
+import java.lang.System.Logger;
 import java.lang.reflect.Field;
 
 import com.studica.frc.AHRS;
@@ -12,6 +13,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -54,14 +58,20 @@ public class OdometrySubsystem extends SubsystemBase {
     
     // double oldY;
     // double oldX;
+    StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault()
+    .getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
     @Override
     public void periodic() {
         Rotation2d gyroAngle = new Rotation2d(gyro.getAngle() * Math.PI / 180);
         pose = m_odometry.update(gyroAngle,
         driveSub.getPositions());
+        publisher.set(driveSub.getStates());
+        
+        
         // System.out.println(pose.getX() + ", " + pose.getY() + " " +
         field.setRobotPose(pose);
         SmartDashboard.putData("Field", field);
+        
         // var dx = (getX() - oldX); var dy = (getY() - oldY);
         // var dc =Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
         // System.out.println( dx + ", " + dy + " : " + dc);

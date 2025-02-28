@@ -44,7 +44,7 @@ public class LaserSubsystem extends SubsystemBase {
   double laserDistance;
   
   //Misc Variables
-  private SerialPort arduino;
+  // private SerialPort arduino;
   private StringBuilder receivedData; // Use StringBuilder for efficient string building
   SparkMax motor = new SparkMax(14, frc.robot.Constants.motorType);
 
@@ -54,12 +54,12 @@ public class LaserSubsystem extends SubsystemBase {
   public LaserSubsystem(DriveSubsystem driveSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
     Shuffleboard.getTab("Odometry").addDouble("Laser Distance (mm)", () -> {return laserDistance;});
     Shuffleboard.getTab("Odometry").addDouble("Laser Motor (Radians)", () -> {return getMotorPosition();});
-    try {
-            arduino = new SerialPort(9600, SerialPort.Port.kUSB); // Match baud rate!
-            receivedData = new StringBuilder();
-        } catch (Exception e) {
-            System.err.println("Error initializing serial port: " + e.getMessage());
-        }
+    // try {
+    //         arduino = new SerialPort(9600, SerialPort.Port.kUSB); // Match baud rate!
+    //         receivedData = new StringBuilder();
+    //     } catch (Exception e) {
+    //         System.err.println("Error initializing serial port: " + e.getMessage());
+    //     }
 
     this.driveSub = driveSub;
     this.tagSub = tagSub;
@@ -72,39 +72,39 @@ public class LaserSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // if (arduino != null) {
-    try {
-      // Check how many bytes are available to read
-      int bytesAvailable = arduino.getBytesReceived();
-      // System.out.println(bytesAvailable
-      if (bytesAvailable > 0) {
-        byte[] buffer = new byte[bytesAvailable]; // Create a buffer to read into
-        buffer = arduino.read(bytesAvailable); // Read the bytes
-        int bytesRead = buffer.length;
-        // Convert bytes to String (UTF-8 encoding is usually good)
-        String receivedString = new String(buffer, 0, bytesRead, "UTF-8");
+    // try {
+    //   // Check how many bytes are available to read
+    //   int bytesAvailable = arduino.getBytesReceived();
+    //   // System.out.println(bytesAvailable
+    //   if (bytesAvailable > 0) {
+    //     byte[] buffer = new byte[bytesAvailable]; // Create a buffer to read into
+    //     buffer = arduino.read(bytesAvailable); // Read the bytes
+    //     int bytesRead = buffer.length;
+    //     // Convert bytes to String (UTF-8 encoding is usually good)
+    //     String receivedString = new String(buffer, 0, bytesRead, "UTF-8");
         
-        // Process the received data (e.g., parse values)
-        receivedData.append(receivedString); // Append to the StringBuilder
+    //     // Process the received data (e.g., parse values)
+    //     receivedData.append(receivedString); // Append to the StringBuilder
         
-        // Check if a complete message is received (e.g., based on a delimiter like '\n')
-        if (receivedData.toString().contains("\n")) {
-          String completeMessage = receivedData.toString().trim();
-            try {
-              float sensorValue = Float.parseFloat(completeMessage);
-              laserDistance = sensorValue;
-              tagSub.setDistance(laserDistance);
-              // System.out.println("Sensor Value: " + sensorValue);
-            } catch (NumberFormatException e) {
-                // System.err.println("Error parsing float: " + completeMessage);
-            }
-          }
-          receivedData.setLength(0); // Clear the StringBuilder for the next message
-        }
+    //     // Check if a complete message is received (e.g., based on a delimiter like '\n')
+    //     if (receivedData.toString().contains("\n")) {
+    //       String completeMessage = receivedData.toString().trim();
+    //         try {
+    //           float sensorValue = Float.parseFloat(completeMessage);
+    //           laserDistance = sensorValue;
+    //           tagSub.setDistance(laserDistance);
+    //           // System.out.println("Sensor Value: " + sensorValue);
+    //         } catch (NumberFormatException e) {
+    //             // System.err.println("Error parsing float: " + completeMessage);
+    //         }
+    //       }
+    //       receivedData.setLength(0); // Clear the StringBuilder for the next message
+    //     }
             
 
-    } catch (Exception e) {
-        System.err.println("Error reading from serial port: " + e.getMessage());
-    }
+    // } catch (Exception e) {
+    //     System.err.println("Error reading from serial port: " + e.getMessage());
+    // }
     // }
     double angle = setAngle + odomSub.getGyroAngle();
     while (angle > Math.PI) {

@@ -13,8 +13,8 @@ import frc.robot.Constants;
 
 public class ClimberSubsystem extends SubsystemBase {
 
-  SparkMax motor = new SparkMax(13, Constants.motorType);
-  RelativeEncoder encoder = motor.getEncoder();
+  // SparkMax motor = new SparkMax(13, Constants.motorType);
+  // RelativeEncoder encoder = motor.getEncoder();
   double speed = 0.0;
 
 
@@ -25,8 +25,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    motor.set(speed);
-    System.out.println("Encoder: " + encoder.getPosition() + " Speed: " + speed);
+    // motor.set(speed);
   }
 
   public void setSpeed(double s) {

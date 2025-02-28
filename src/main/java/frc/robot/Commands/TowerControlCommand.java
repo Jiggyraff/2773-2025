@@ -32,12 +32,20 @@ public class TowerControlCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    towerSub.throttleControl(joy.getZ());
-    if (joy.getRawButton(7)) {
-      climbSub.setSpeed(-0.15);
+    // double sensitivity = 2/(joy.getZ()+1);
+    towerSub.throttleControl(joy.getZ() * 1);
+    
+    microCommands();
+  }
+
+  public void microCommands() {
+    if (joy.getRawButtonPressed(8)) {
+      towerSub.zeroEncoders();
+      System.out.println("Manually reset tower encoders");
     }
-    if (joy.getRawButton(6)) {
-      climbSub.setSpeed(0.2);
+    if (joy.getRawButton(9)) {
+      towerSub.setSpeed(0.05);
+      System.out.println("Manually moving tower down");
     }
   }
 

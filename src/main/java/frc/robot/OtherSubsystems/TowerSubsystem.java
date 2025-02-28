@@ -18,7 +18,7 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax motor2 = new SparkMax(24, SparkMax.MotorType.kBrushless);
   RelativeEncoder encoder = motor.getEncoder();
   RelativeEncoder encoder2 = motor2.getEncoder();
-  PIDController leftPID = new PIDController(0.15, 0.005, 0.005);
+  PIDController leftPID = new PIDController(0.1, 0.001, 0.001);
   private double height;
 
   public TowerSubsystem() {
@@ -32,6 +32,7 @@ public class TowerSubsystem extends SubsystemBase {
     double speed = MathUtil.clamp(leftPID.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed, Constants.MaxTowerSpeed);
     motor.set(speed);
     motor2.set(-speed);
+    
     // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " + height);
   }
 
@@ -44,16 +45,26 @@ public class TowerSubsystem extends SubsystemBase {
   }
 
   public void throttleControl(double d) {
-      setHeight(d*-10-10);
+      setHeight(d*10-10);
   }
 
   public void percentageHeight(double d) {
     setHeight(d*-20);
+    System.out.println("Set to per: " + d + ", Actual: " + d*-20);
   }
 
   public void zeroEncoders() {
     encoder.setPosition(0);
     encoder2.setPosition(0);
+  }
+
+  public void setSpeed(double d) {
+    motor.set(d);
+    motor2.set(-d);
+  }
+
+  public void differenceThrottle(double d) {
+    setHeight(d*0.05);
   }
 
 }

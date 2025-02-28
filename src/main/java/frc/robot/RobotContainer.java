@@ -7,8 +7,11 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -30,20 +33,24 @@ import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
   public RobotContainer() {
     configureBindings();
   }
-  //Auto chooser for Robot.java
+
+  // Auto chooser for Robot.java
   // Controllers
   Joystick hotaz = new Joystick(0);
   Joystick towerJoy = new Joystick(1);
-  
+
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
@@ -51,94 +58,85 @@ public class RobotContainer {
   LaserSubsystem laserSub = new LaserSubsystem(driveSub, tagSub, odomSub);
   TowerSubsystem towerSub = new TowerSubsystem();
   ClimberSubsystem climbSub = new ClimberSubsystem();
-  
+
   // Commands from files
   HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
-  TowerControlCommand towerCommand = new TowerControlCommand(towerSub, climbSub, towerJoy);
+  TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
+  ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
+  SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
+  {
+    driveSub.setDefaultCommand(driveCommand);
+    // towerSub.setDefaultCommand(towerCommand);
+    climbSub.setDefaultCommand(climberCommand);
+    towerSub.setDefaultCommand(simpleTowerCommand);
+  }
 
-  
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
   RotateToCommand rotateToCommand = new RotateToCommand(Math.PI, driveSub, odomSub);
-  PolarMoveCommand polarMove = new PolarMoveCommand(-(3/4)*Math.PI, 1, driveSub, odomSub);
+  PolarMoveCommand polarMove = new PolarMoveCommand(-(3 / 4) * Math.PI, 1, driveSub, odomSub);
   RotateToRadiansCommand rotateToZero = new RotateToRadiansCommand(0, odomSub, driveSub);
   RotateToRadiansCommand rotateToFlank = new RotateToRadiansCommand(Math.PI, odomSub, driveSub);
-  SequentialCommandGroup triangle = 
-    new PolarMoveCommand(-Math.PI/4, 1, driveSub, odomSub
-  ).andThen(
-    new PolarMoveCommand(-(3/4)*Math.PI, 1, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand((1/2)*Math.PI, 1, driveSub, odomSub)
-  );
-  SequentialCommandGroup ladder = 
-    new PolarMoveCommand(0, 1, driveSub, odomSub
-  ).andThen(
-    new PolarMoveCommand(-Math.PI/4, 1, driveSub, odomSub
-  ).andThen(
-    new PolarMoveCommand(-Math.PI/2, 1, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(3*-Math.PI/4, 1, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(-Math.PI, 1, driveSub, odomSub)
-  ));
-  SequentialCommandGroup plus = 
-    new PolarMoveCommand(0, 0.5, driveSub, odomSub
-  ).andThen(
-    new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(Math.PI/2, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(3*Math.PI/2, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(0, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(3*Math.PI/2, 0.5, driveSub, odomSub)
-  ).andThen(
-    new PolarMoveCommand(Math.PI/2, 0.5, driveSub, odomSub)
-  );
+  SequentialCommandGroup triangle = new PolarMoveCommand(-Math.PI / 4, 1, driveSub, odomSub).andThen(
+      new PolarMoveCommand(-(3 / 4) * Math.PI, 1, driveSub, odomSub)).andThen(
+          new PolarMoveCommand((1 / 2) * Math.PI, 1, driveSub, odomSub));
+  SequentialCommandGroup ladder = new PolarMoveCommand(0, 1, driveSub, odomSub).andThen(
+      new PolarMoveCommand(-Math.PI / 4, 1, driveSub, odomSub).andThen(
+          new PolarMoveCommand(-Math.PI / 2, 1, driveSub, odomSub)).andThen(
+              new PolarMoveCommand(3 * -Math.PI / 4, 1, driveSub, odomSub))
+          .andThen(
+              new PolarMoveCommand(-Math.PI, 1, driveSub, odomSub)));
+  SequentialCommandGroup plus = new PolarMoveCommand(0, 0.5, driveSub, odomSub).andThen(
+      new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)).andThen(
+          new PolarMoveCommand(Math.PI / 2, 0.5, driveSub, odomSub))
+      .andThen(
+          new PolarMoveCommand(3 * Math.PI / 2, 0.5, driveSub, odomSub))
+      .andThen(
+          new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub))
+      .andThen(
+          new PolarMoveCommand(0, 0.5, driveSub, odomSub))
+      .andThen(
+          new PolarMoveCommand(3 * Math.PI / 2, 0.5, driveSub, odomSub))
+      .andThen(
+          new PolarMoveCommand(Math.PI / 2, 0.5, driveSub, odomSub));
 
-  SequentialCommandGroup plusPlus = 
-    new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub
-  ).andThen(
-    new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub)
-  ).andThen(
-    new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub)
-  );
+  SequentialCommandGroup plusPlus = new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub).andThen(
+      new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)).andThen(
+          new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub))
+      .andThen(
+          new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
+      .andThen(
+          new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub))
+      .andThen(
+          new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub))
+      .andThen(
+          new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
+      .andThen(
+          new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub));
 
   SequentialCommandGroup firstQuadrantPos = new DeltaPoseCommand(3, 0, Math.PI, driveSub, odomSub).andThen(
-    new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
-      new DeltaPoseCommand(-2, 0, -Math.PI/2, driveSub, odomSub)
-    )
-  );
+      new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
+          new DeltaPoseCommand(-2, 0, -Math.PI / 2, driveSub, odomSub)));
 
   SequentialCommandGroup findAndApproachTag = new LockOnTagCommand(tagSub, laserSub).andThen();
-
-  MoveElevatorCommand moveElevatorMax = new MoveElevatorCommand(1, towerSub);
-
-  PerfectPoseDifferenceCommand ppCommand = new PerfectPoseDifferenceCommand(-0.5, 0.5, 0, driveSub, odomSub);
-  //Buttons
-  //driveStick
+  // Buttons
+  // driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
   // JoystickButton resetOrientationButton = new JoystickButton(hotas, 7);
-  
-  
-    
-  
+
   private void configureBindings() {
-    driveSub.setDefaultCommand(driveCommand);
-    towerSub.setDefaultCommand(towerCommand);
+    JoystickButton towerModeSwitchButton = new JoystickButton(towerJoy, 2);
+    towerModeSwitchButton.toggleOnTrue(new InstantCommand(() -> {
+      if (!towerJoy.getRawButton(1))
+        return;
+      if (towerSub.getDefaultCommand() != simpleTowerCommand) {
+        towerSub.setDefaultCommand(simpleTowerCommand);
+      } else {
+        towerSub.setDefaultCommand(towerCommand);
+      }
+      towerSub.getDefaultCommand().schedule();
+    }));
   }
+
   public Command getAutonomousCommand() {
     return ppCommand;
   }

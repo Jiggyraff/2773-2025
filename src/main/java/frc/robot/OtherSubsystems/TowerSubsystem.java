@@ -20,20 +20,24 @@ public class TowerSubsystem extends SubsystemBase {
   RelativeEncoder encoder2 = motor2.getEncoder();
   PIDController leftPID = new PIDController(0.1, 0.001, 0.001);
   private double height;
+  private boolean automatic = false;
 
   public TowerSubsystem() {
 
   }
 
-  //IMPORTANT: the elevator's range is from 0 to -20, with -20 being the top
+  // IMPORTANT: the elevator's range is from 0 to -20, with -20 being the top
   @Override
   public void periodic() {
-    leftPID.setSetpoint(height);
-    double speed = MathUtil.clamp(leftPID.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed, Constants.MaxTowerSpeed);
-    motor.set(speed);
-    motor2.set(-speed);
-    
-    // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " + height);
+    if (automatic) {
+      leftPID.setSetpoint(height);
+      double speed = MathUtil.clamp(leftPID.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
+          Constants.MaxTowerSpeed);
+      motor.set(speed);
+      motor2.set(-speed);
+      // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
+      // height);
+    }
   }
 
   public void setHeight(double d) {
@@ -44,13 +48,24 @@ public class TowerSubsystem extends SubsystemBase {
     height += d;
   }
 
+  public void runMotors(double speed) {
+    if (!automatic) {
+      motor.set(speed);
+      motor2.set(-speed);
+    }
+  }
+
+  public void stopMotors() {
+    motor.set(0);
+    motor2.set(0);
+  }
+
   public void throttleControl(double d) {
-      setHeight(d*10-10);
+    setHeight(d * 10 - 10);
   }
 
   public void percentageHeight(double d) {
-    setHeight(d*-20);
-    System.out.println("Set to per: " + d + ", Actual: " + d*-20);
+    setHeight(d * -20);
   }
 
   public void zeroEncoders() {
@@ -58,13 +73,15 @@ public class TowerSubsystem extends SubsystemBase {
     encoder2.setPosition(0);
   }
 
-  public void setSpeed(double d) {
-    motor.set(d);
-    motor2.set(-d);
-  }
-
-  public void differenceThrottle(double d) {
-    setHeight(d*0.05);
+  public void setAutomatic(boolean enabled) {
+    if (this.automatic != enabled) {
+      // Mode was changed
+      if (enabled) {
+        // Sync hieght with current encoder.
+        height = encoder.getPosition();
+      }
+    }
+    this.automatic = enabled;
   }
 
 }

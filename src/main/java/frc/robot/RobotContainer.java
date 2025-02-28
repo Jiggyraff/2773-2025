@@ -22,6 +22,8 @@ import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LockOnTagCommand;
+import frc.robot.Autonomous.MoveElevatorCommand;
+import frc.robot.Autonomous.PerfectPoseDifferenceCommand;
 import frc.robot.Autonomous.PolarMoveCommand;
 import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
@@ -136,6 +138,6 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return findAndApproachTag;
+    return ppCommand;
   }
 }

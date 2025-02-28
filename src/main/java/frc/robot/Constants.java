@@ -41,7 +41,7 @@ public final class Constants {
     
         public static final double MaxDriveSpeed = 0.6;
         public static final double MaxRotationSpeed = 0.20;
-        public static final double MaxTowerSpeed = 0.6;
+        public static final double MaxTowerSpeed = 0.3;
   //Soft limitations
   public static final double maxWheelSpeed = 1.0; //meters per second
 

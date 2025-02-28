@@ -30,6 +30,9 @@ public class SwerveDriveModule {
 
   private static double DriveMotorWheelGearRatio = 1.0 / 6.75;
   private static double EncoderMagicRevolutionNumber = 0.047964; //  42/1024 = resolution/1024
+  
+  private double oldDistance = 0.0;
+  private double velocity = 0.0;
 
   public SwerveDriveModule(int driveId, int rotateId, int encoderId, double alpha) {
     driveMotor = new SparkMax(driveId, frc.robot.Constants.motorType);

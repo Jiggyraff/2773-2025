@@ -18,7 +18,7 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax motor2 = new SparkMax(24, SparkMax.MotorType.kBrushless);
   RelativeEncoder encoder = motor.getEncoder();
   RelativeEncoder encoder2 = motor2.getEncoder();
-  PIDController leftPID = new PIDController(0.15, 0.005, 0.005);
+  PIDController leftPID = new PIDController(0.1, 0.001, 0.001);
   private double height;
   private boolean automatic = false;
 

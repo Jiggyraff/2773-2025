@@ -6,46 +6,34 @@ package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
-/* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class TowerControlCommand extends Command {
-
-
   TowerSubsystem towerSub;
-  ClimberSubsystem climbSub;
   Joystick joy;
 
   /** Creates a new TowerControlCommand. */
-  public TowerControlCommand(TowerSubsystem towerSub, ClimberSubsystem climbSub, Joystick joy) {
+  public TowerControlCommand(TowerSubsystem towerSub, Joystick joy) {
     addRequirements(towerSub);
     this.towerSub = towerSub;
-    this.climbSub = climbSub;
     this.joy = joy;
   }
 
-  // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    towerSub.setAutomatic(true);    
+  }
 
-  // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     towerSub.throttleControl(joy.getZ());
-    if (joy.getRawButton(7)) {
-      climbSub.setSpeed(-0.15);
-    }
-    if (joy.getRawButton(6)) {
-      climbSub.setSpeed(0.2);
-    }
   }
 
-  // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    towerSub.stopMotors();
+  }
 
-  // Returns true when the command should end.
   @Override
   public boolean isFinished() {
     return false;

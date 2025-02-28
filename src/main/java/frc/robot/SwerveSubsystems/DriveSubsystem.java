@@ -4,12 +4,19 @@
 
 package frc.robot.SwerveSubsystems;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Information.LaserSubsystem;
+import frc.robot.Information.OdometrySubsystem;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 
@@ -42,6 +49,7 @@ public class DriveSubsystem extends SubsystemBase {
   /** Creates a new TestSubsystem. */
   public DriveSubsystem() {
     Shuffleboard.getTab("Navigation").addDoubleArray("Set Angle gilcswdicqewe", () -> {return new double[] {setAngle};});
+    
   }
 
 
@@ -64,6 +72,13 @@ public class DriveSubsystem extends SubsystemBase {
     brMotor.directionalDrive(speed, angle);
     frMotor.directionalDrive(speed, angle);
     flMotor.directionalDrive(speed, angle);
+  }
+
+  public void chassisDrive(ChassisSpeeds chassisSpeeds) {
+    directionalDrive(
+      Constants.powerVelocityRatio * Math.sqrt(Math.pow(chassisSpeeds.vxMetersPerSecond, 2) + Math.pow(chassisSpeeds.vyMetersPerSecond, 2)),
+      Constants.powerTwistRatio * Math.atan2(chassisSpeeds.vyMetersPerSecond, chassisSpeeds.vxMetersPerSecond)
+    );
   }
 
   static class Vec {
@@ -175,10 +190,11 @@ public void increasePBy(double e) {
 }
 
 public SwerveModuleState[] getStates() {
-  SwerveModuleState[] states = new SwerveModuleState[4];
-  for (int i = 0 ; i< 4; i++) {
-    states[i] = new SwerveModuleState(modules[i].distanceEncoder.getVelocity(), new Rotation2d(modules[i].canCoderPositionAdjusted()));
-  }
-  return states;
+  return new SwerveModuleState[] {
+    modules[0].getSwerveState(),
+    modules[1].getSwerveState(),
+    modules[2].getSwerveState(),
+    modules[3].getSwerveState()
+  };
 }
 }

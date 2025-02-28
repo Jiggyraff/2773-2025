@@ -3,6 +3,10 @@ package frc.robot.Information;
 import java.lang.System.Logger;
 import java.lang.reflect.Field;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
@@ -10,6 +14,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -17,6 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -54,6 +60,41 @@ public class OdometrySubsystem extends SubsystemBase {
         Shuffleboard.getTab("Odometry").addDouble("Robot Y", () -> {return getY();});
         SmartDashboard.putNumber("X", pose.getX());
         SmartDashboard.putNumber("Y", pose.getY());
+
+        //This constructor is for decoration, these values make no sense
+        RobotConfig config = new RobotConfig(0, 0, null, 0);
+        try{
+          config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+          // Handle exception as needed
+          e.printStackTrace();
+        }
+
+        // Configure AutoBuilder last
+        AutoBuilder.configure(
+
+                this::getPose, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> driveSub.chassisDrive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                ),
+                config, // The robot configuration
+                () -> {
+                  // Boolean supplier that controls when the path will be mirrored for the red alliance
+                  // This will flip the path being followed to the red side of the field.
+                  // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                  var alliance = DriverStation.getAlliance();
+                  if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                  }
+                  return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
     }
     
     // double oldY;
@@ -93,6 +134,15 @@ public class OdometrySubsystem extends SubsystemBase {
     public Pose2d getPose() {
         return pose;
     }
+
+    public void resetPose(Pose2d newPose) {
+        pose = newPose;
+    }
+
+    public ChassisSpeeds getChassisSpeeds() {
+        return m_kinematics.toChassisSpeeds(driveSub.getStates());
+    }
+
     public double getX() {
         return pose.getX();
     }

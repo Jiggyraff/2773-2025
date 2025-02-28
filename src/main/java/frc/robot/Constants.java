@@ -19,6 +19,8 @@ public final class Constants {
   //Measurements of robot
   public static final double DistanceBetweenWheels = 0.616;
   public static final double WheelCircumference =  Math.PI * 0.1016;
+  public static final double powerVelocityRatio = 1.0; //Represents (motorRelativePower/actualVelocity) aka a conversion
+  public static final double powerTwistRatio = 1.0; //Represents (motorRelativePower/rotationVelocity) aka a conversion
 
   //MotorType of our Neos & PWMs
   public static final MotorType motorType = MotorType.kBrushless;

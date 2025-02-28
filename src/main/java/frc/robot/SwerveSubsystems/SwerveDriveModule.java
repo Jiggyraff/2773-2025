@@ -5,11 +5,13 @@
 package frc.robot.SwerveSubsystems;
 
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.Constants;
 
@@ -109,5 +111,10 @@ public class SwerveDriveModule {
   public SwerveModulePosition getSwervePosition() {
     return new SwerveModulePosition(
         distanceEncoderPosition(), new Rotation2d(canCoderPositionAdjusted()));
+  }
+
+  public SwerveModuleState getSwerveState() {
+    return new SwerveModuleState(
+        distanceEncoder.getVelocity(), new Rotation2d(canCoderPositionAdjusted()));
   }
 }

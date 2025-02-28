@@ -138,6 +138,6 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return ppCommand;
+    return findAndApproachTag;
   }
 }

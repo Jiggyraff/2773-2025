@@ -24,8 +24,11 @@ public class ClimberControlCommand extends Command {
     if (joy.getRawButton(7)) {
       climbSub.setSpeed(-0.15);
     }
-    if (joy.getRawButton(6)) {
-      climbSub.setSpeed(0.2);
+    else if (joy.getRawButton(6)) {
+      climbSub.setSpeed(0.15);
+    }
+    else {
+      climbSub.setSpeed(0);
     }
   }
 

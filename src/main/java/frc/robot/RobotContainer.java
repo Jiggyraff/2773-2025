@@ -64,7 +64,6 @@ public class RobotContainer {
   SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
   {
     driveSub.setDefaultCommand(driveCommand);
-    // towerSub.setDefaultCommand(towerCommand);
     climbSub.setDefaultCommand(climberCommand);
     towerSub.setDefaultCommand(simpleTowerCommand);
   }

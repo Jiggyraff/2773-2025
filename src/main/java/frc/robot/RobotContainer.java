@@ -82,28 +82,6 @@ public class RobotContainer {
   PolarMoveCommand polarMove = new PolarMoveCommand(-(3 / 4) * Math.PI, 1, driveSub, odomSub);
   RotateToRadiansCommand rotateToZero = new RotateToRadiansCommand(0, odomSub, driveSub);
   RotateToRadiansCommand rotateToFlank = new RotateToRadiansCommand(Math.PI, odomSub, driveSub);
-  SequentialCommandGroup triangle = new PolarMoveCommand(-Math.PI / 4, 1, driveSub, odomSub).andThen(
-      new PolarMoveCommand(-(3 / 4) * Math.PI, 1, driveSub, odomSub)).andThen(
-          new PolarMoveCommand((1 / 2) * Math.PI, 1, driveSub, odomSub));
-  SequentialCommandGroup ladder = new PolarMoveCommand(0, 1, driveSub, odomSub).andThen(
-      new PolarMoveCommand(-Math.PI / 4, 1, driveSub, odomSub).andThen(
-          new PolarMoveCommand(-Math.PI / 2, 1, driveSub, odomSub)).andThen(
-              new PolarMoveCommand(3 * -Math.PI / 4, 1, driveSub, odomSub))
-          .andThen(
-              new PolarMoveCommand(-Math.PI, 1, driveSub, odomSub)));
-  SequentialCommandGroup plus = new PolarMoveCommand(0, 0.5, driveSub, odomSub).andThen(
-      new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub)).andThen(
-          new PolarMoveCommand(Math.PI / 2, 0.5, driveSub, odomSub))
-      .andThen(
-          new PolarMoveCommand(3 * Math.PI / 2, 0.5, driveSub, odomSub))
-      .andThen(
-          new PolarMoveCommand(Math.PI, 0.5, driveSub, odomSub))
-      .andThen(
-          new PolarMoveCommand(0, 0.5, driveSub, odomSub))
-      .andThen(
-          new PolarMoveCommand(3 * Math.PI / 2, 0.5, driveSub, odomSub))
-      .andThen(
-          new PolarMoveCommand(Math.PI / 2, 0.5, driveSub, odomSub));
 
   SequentialCommandGroup plusPlus = new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub).andThen(
       new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)).andThen(

@@ -23,7 +23,7 @@ public class TowerSubsystem extends SubsystemBase {
   private boolean automatic = false;
 
   public TowerSubsystem() {
-
+    
   }
 
   // IMPORTANT: the elevator's range is from 0 to -20, with -20 being the top

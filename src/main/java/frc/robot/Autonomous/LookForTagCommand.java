@@ -17,6 +17,7 @@ public class LookForTagCommand extends Command {
   PIDController motorPID = new PIDController(0.63, 0, 0);
   /** Creates a new LockOnTagCommand. */
   public LookForTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
+    addRequirements(tagSub);
     // Use addRequirements() here to declare subsystem dependencies.
     this.tagSub = tagSub;
     this.laserSub = laserSub;

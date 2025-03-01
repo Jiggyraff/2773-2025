@@ -6,6 +6,7 @@ package frc.robot.Commands;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
 public class TowerControlCommand extends Command {
@@ -21,12 +22,15 @@ public class TowerControlCommand extends Command {
 
   @Override
   public void initialize() {
-    towerSub.setAutomatic(true);    
+    towerSub.setAutomatic(true);
+    towerSub.runMotors(0);
   }
-
+  
   @Override
   public void execute() {
-    towerSub.throttleControl(joy.getZ());
+    towerSub.setDifferenceHeight(joy.getY() * Constants.MaxTowerSpeed);
+    
+
   }
 
   @Override

@@ -24,6 +24,7 @@ public class MoveElevatorCommand extends Command {
   @Override
   public void initialize() {
     towerSub.percentageHeight(h);
+    // System.out.println(h);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -37,6 +38,6 @@ public class MoveElevatorCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return true;
+    return towerSub.atSetpoint();
   }
 }

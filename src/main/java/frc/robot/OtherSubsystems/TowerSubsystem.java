@@ -18,41 +18,42 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax motor2 = new SparkMax(24, SparkMax.MotorType.kBrushless);
   RelativeEncoder encoder = motor.getEncoder();
   RelativeEncoder encoder2 = motor2.getEncoder();
-  PIDController leftPID = new PIDController(0.1, 0.001, 0.001);
-  private double height;
+  PIDController pid = new PIDController(0.1, 0.001, 0.001);
+  
+  
+  private double height = 20;
   private boolean automatic = false;
 
   public TowerSubsystem() {
-    
+    pid.setTolerance(1);
+    pid.reset();
   }
 
-  // IMPORTANT: the elevator's range is from 0 to -20, with -20 being the top
+  // IMPORTANT: the elevator's range is from 0 to 20, with 0 being the top
   @Override
   public void periodic() {
-    if (automatic) {
-      leftPID.setSetpoint(height);
-      double speed = MathUtil.clamp(leftPID.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
+    pid.setIntegratorRange(-0.001, 0.001);
+
+      pid.setSetpoint(height);
+      double speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
           Constants.MaxTowerSpeed);
-      motor.set(speed);
-      motor2.set(-speed);
+      runMotors(speed);
       // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      // height);
-    }
+      // height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
   }
 
   public void setHeight(double d) {
-    height = MathUtil.clamp(d, -20, 0);
+    height = MathUtil.clamp(d, -0.5, 19.7);
   }
 
   public void setDifferenceHeight(double d) {
-    height += d;
+    setHeight(height + d);
   }
 
   public void runMotors(double speed) {
-    if (!automatic) {
+      // System.out.println("Enocders: " + encoder.getPosition() + ", Speed: " + speed);
       motor.set(speed);
       motor2.set(-speed);
-    }
   }
 
   public void stopMotors() {
@@ -60,12 +61,8 @@ public class TowerSubsystem extends SubsystemBase {
     motor2.set(0);
   }
 
-  public void throttleControl(double d) {
-    setHeight(d * 10 - 10);
-  }
-
   public void percentageHeight(double d) {
-    setHeight(d * -20);
+    setHeight(20 - (d * 20));
   }
 
   public void zeroEncoders() {
@@ -78,10 +75,14 @@ public class TowerSubsystem extends SubsystemBase {
       // Mode was changed
       if (enabled) {
         // Sync hieght with current encoder.
-        height = encoder.getPosition();
+        // height = encoder.getPosition();
       }
     }
     this.automatic = enabled;
   }
+
+public boolean atSetpoint() {
+    return pid.atSetpoint();
+}
 
 }

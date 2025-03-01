@@ -113,7 +113,7 @@ public class OdometrySubsystem extends SubsystemBase {
         publisher.set(driveSub.getStates());
         
         
-        // System.out.println(pose.getX() + ", " + pose.getY() + " " +
+        // System.out.println(driveSub.getStates());
         field.setRobotPose(pose);
         SmartDashboard.putData("Field", field);
         
@@ -155,8 +155,9 @@ public class OdometrySubsystem extends SubsystemBase {
         return -pose.getY();
     }
 
-    public void setXY(double x, double y, double rotation) {
+    public void setPose(double x, double y, double rotation) {
         pose = new Pose2d(x, y, new Rotation2d(rotation));
+        System.out.println("X: " + x + " Y: " + y);
         m_odometry.resetPose(pose);
     }
 

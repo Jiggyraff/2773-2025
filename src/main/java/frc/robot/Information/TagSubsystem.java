@@ -34,8 +34,8 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     
     //Subsystem state variables
-    private Boolean isEnabled = true;     //Deactivates everything
-    private Boolean syncTags = true;       //Stops feeding to nav
+    private Boolean isEnabled = false;     //Deactivates everything
+    private Boolean syncTags = false;       //Stops feeding to nav
     private Boolean cautiousMode = false;  //Checks if the data *could* be reliable based off parameters
     private Boolean seesTag = false;
     private double alphaTolerance = 0.1;
@@ -114,6 +114,7 @@ public class TagSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // System.out.println(seesTag);
         if (isEnabled) {
             receivePacket();
         }
@@ -131,6 +132,7 @@ public class TagSubsystem extends SubsystemBase {
 
                 this.lastInput = rawText;
                 data = parseTagData(rawText);
+                // System.out.println(data);
                 if (data != null) {
                     // updateOdometry(data);
                     updateTags(data);
@@ -138,15 +140,16 @@ public class TagSubsystem extends SubsystemBase {
                     seesTag = true;
                     // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
                     deadTimer = 0;
-                } else {
-                    deadTimer++;
-                } 
-                if (deadTimer == 10) {
-                    System.out.println("No tag in sight");
-                    seesTag = false;
                 }
                 buffer.clear();
 
+            } else {
+                // System.out.println("Null tag:" + deadTimer);
+                deadTimer++;
+            } 
+            if (deadTimer == 20) {
+                // System.out.println("No tag in sight");
+                seesTag = false;
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -164,7 +167,7 @@ public class TagSubsystem extends SubsystemBase {
             double x = laserDistance*Math.cos(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][1] * 0.0254;
             double y = laserDistance*Math.sin(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2] * 0.0254;
             double radians = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180 - Math.PI - data.alpha;
-            odomSub.setXY(x, y, radians);
+            odomSub.setPose(x, y, radians);
             // System.out.println("Laser:" + laserDistance*Math.cos(angleFromHorizontal));
         }
     }

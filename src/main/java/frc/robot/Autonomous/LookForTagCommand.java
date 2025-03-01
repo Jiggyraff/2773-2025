@@ -35,17 +35,18 @@ public class LookForTagCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (!tagSub.getSeestag()) {
-      if (c > 5) {
+    if (c == 8) {
+      if (!tagSub.getSeestag()) {
         laserSub.setAngleDifference(0.05);
-        c = 0;
+        // System.out.println(tagSub.getSeestag());
+      } else {
+        // System.out.println("XCom: " + tagSub.getXCom());
+        double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.01, 0.01);
+        laserSub.setAngleDifference(speed);
       }
-      c++;
-      System.out.println(tagSub.getSeestag());
-    } else {
-      double speed = MathUtil.clamp(motorPID.calculate(tagSub.getXCom()), -0.05, 0.05);
-      laserSub.setAngleDifference(speed);
+      c = 0;
     }
+    c++;
     
     
   }

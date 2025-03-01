@@ -72,7 +72,7 @@ public class RobotContainer {
   {
     driveSub.setDefaultCommand(driveCommand);
     climbSub.setDefaultCommand(climberCommand);
-    towerSub.setDefaultCommand(simpleTowerCommand);
+    towerSub.setDefaultCommand(towerCommand);
     tagSub.setDefaultCommand(lookForTagCommand);
     NamedCommands.registerCommand("Elevator Max Height", moveToMaxHeight);
   }
@@ -83,52 +83,80 @@ public class RobotContainer {
   RotateToRadiansCommand rotateToZero = new RotateToRadiansCommand(0, odomSub, driveSub);
   RotateToRadiansCommand rotateToFlank = new RotateToRadiansCommand(Math.PI, odomSub, driveSub);
 
-  SequentialCommandGroup plusPlus = new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub).andThen(
-      new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)).andThen(
-          new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub))
-      .andThen(
-          new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
-      .andThen(
-          new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub))
-      .andThen(
-          new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub))
-      .andThen(
-          new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
-      .andThen(
-          new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub));
+  // SequentialCommandGroup plusPlus = new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub).andThen(
+  //     new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)).andThen(
+  //         new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub))
+  //     .andThen(
+  //         new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
+  //     .andThen(
+  //         new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub))
+  //     .andThen(
+  //         new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub))
+  //     .andThen(
+  //         new DeltaPoseCommand(0.5, 0, 0, driveSub, odomSub))
+  //     .andThen(
+  //         new DeltaPoseCommand(-0.5, 0, 0, driveSub, odomSub));
 
-  SequentialCommandGroup firstQuadrantPos = new DeltaPoseCommand(3, 0, Math.PI, driveSub, odomSub).andThen(
-      new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
-          new DeltaPoseCommand(-2, 0, -Math.PI / 2, driveSub, odomSub)));
+  // SequentialCommandGroup firstQuadrantPos = new DeltaPoseCommand(3, 0, Math.PI, driveSub, odomSub).andThen(
+  //     new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
+  //         new DeltaPoseCommand(-2, 0, -Math.PI / 2, driveSub, odomSub)));
 
   // Buttons
   // driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
   // JoystickButton resetOrientationButton = new JoystickButton(hotas, 7);
 
+  SequentialCommandGroup heightLadder = new MoveElevatorCommand(0.5, towerSub).andThen(
+    new MoveElevatorCommand(0.25, towerSub).andThen(
+      new MoveElevatorCommand(0.75, towerSub).andThen(
+        new MoveElevatorCommand(0, towerSub)
+      )
+    )
+  );
+
   private void configureBindings() {
     JoystickButton towerModeSwitchButton = new JoystickButton(towerJoy, 2);
     towerModeSwitchButton.toggleOnTrue(new InstantCommand(() -> {
-      if (!towerJoy.getRawButton(1))
-        return;
+      if (towerJoy.getRawButton(1)) {
+        
       if (towerSub.getDefaultCommand() != simpleTowerCommand) {
         towerSub.setDefaultCommand(simpleTowerCommand);
+        System.out.println("Simpletower");
       } else {
         towerSub.setDefaultCommand(towerCommand);
+        System.out.println("Complextower");
       }
       towerSub.getDefaultCommand().schedule();
+    }
     }));
 
   }
 
+  SequentialCommandGroup doADance = new ParallelCommandGroup(
+    new DeltaPoseCommand(0.5, 0.5, -Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(0.25, towerSub)
+  ).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(-1, 1, Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(1, 1, -Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(0.75, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(-1, 1, Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(1, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(0.5, -3.5, 0, driveSub, odomSub),
+    new MoveElevatorCommand(0, towerSub)
+  ));
+
   public Command getAutonomousCommand(String autoChosen) {
     switch (autoChosen){
-      case "Auto 1": return new PathPlannerAuto("New Path");
-      case "Auto 2": return null;
-      case "Auto 3": return null;
-      case "Auto 4": return null;
-      case "Auto 5": return null;
-      case "Auto 6": return null;
+      case "Auto 1": return new PathPlannerAuto("Do A Flip");
+      case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
+      case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
+      case "Auto 4": return new DeltaPoseCommand(-1.5, -0.5, 0, driveSub, odomSub);
+      case "Auto 5": return doADance;
+      case "Auto 6": return heightLadder;
             default: return null;
     }
   }

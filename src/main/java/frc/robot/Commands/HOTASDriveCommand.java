@@ -54,7 +54,7 @@ public class HOTASDriveCommand extends Command {
     double angle = Math.atan2(y, x);
     double gyroAngle = odomSub.getGyroAngle();
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double setSpeed = Math.sqrt(x * x + y * y);
+    double setSpeed = MathUtil.clamp(Math.sqrt(x * x + y * y)*2, 0,2);
     double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone));
     // System.out.println(driveSubsystem.blMotor.distanceEncoderPosition() - oldT);
           
@@ -91,7 +91,7 @@ public class HOTASDriveCommand extends Command {
       System.out.println("Gyro Reset Manually");
     }
     if (buttonPressed(7) && buttonOnPress(11)) {
-      odomSub.setXY(0,0,odomSub.getGyroAngle());
+      odomSub.setPose(0,0,odomSub.getGyroAngle());
       System.out.println("Position Reset Manually");
     }
     if (buttonPressed(7) && buttonOnPress(9)) {

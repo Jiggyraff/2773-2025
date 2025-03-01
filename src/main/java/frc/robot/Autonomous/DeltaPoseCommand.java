@@ -6,6 +6,7 @@ package frc.robot.Autonomous;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Information.LaserSubsystem;
@@ -40,6 +41,15 @@ public class DeltaPoseCommand extends Command {
     this.driveSubsystem = driveSubsystem;
     this.odomSub = odomSub;
     speedPID = driveSubsystem.getPID();
+    // Shuffleboard.getTab("Delta Pose").addDouble("Speed" + goalX+goalY+goalRotation, () -> {return speed;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("Angle" + goalX+goalY+goalRotation, () -> {return radians;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("InitX" + goalX+goalY+goalRotation, () -> {return initX;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("InitY" + goalX+goalY+goalRotation, () -> {return initY;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("GoalX" + goalX+goalY+goalRotation, () -> {return goalX;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("GoalY" + goalX+goalY+goalRotation, () -> {return goalY;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("X Left" + goalX+goalY+goalRotation, () -> {return dx;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("Y Left" + goalX+goalY+goalRotation, () -> {return dy;});
+    // Shuffleboard.getTab("Delta Pose").addBoolean("Stopped" + goalX+goalY+goalRotation, () -> {return isFinished();});
   }
 
   // Called when the command is initially scheduled.
@@ -61,14 +71,18 @@ public class DeltaPoseCommand extends Command {
   double speedSum = 0.0;
   double sumX = 0.0;
   double sumY = 0.0;
+  double radians = 0.0;
+  double dx;
+  double dy;
   @Override
   public void execute() {
+    
     // double rateOfChange = currentDistance - Math.sqrt(Math.pow(odomSub.getX(), 2)+Math.pow(odomSub.getY(), 2));
     // currentDistance = Math.sqrt(Math.pow(odomSub.getX(), 2)+Math.pow(odomSub.getY(), 2));
-    var dx = (goalX - odomSub.getX()); var dy = (goalY - odomSub.getY());
+    dx = (goalX - odomSub.getX()); dy = (goalY - odomSub.getY());
     distanceLeft = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
-    double radians = Math.atan2(dy,-dx) - odomSub.getGyroAngle();
+    radians = Math.atan2(dy,-dx) - odomSub.getGyroAngle();
     var dr = -(goalRotation - odomSub.getGyroAngle());
     if (dr > Math.PI) {
       dr -= 2*Math.PI;
@@ -77,7 +91,7 @@ public class DeltaPoseCommand extends Command {
     }
     double rspeed = MathUtil.clamp(rotationPID.calculate(dr), -Constants.MaxRotationSpeed, Constants.MaxRotationSpeed);
 
-    speed = MathUtil.clamp(speedPID.calculate(distanceLeft), -Constants.MaxDriveSpeed, Constants.MaxDriveSpeed);
+    speed = MathUtil.clamp(speedPID.calculate(distanceLeft), -Constants.MaxAutoDriveSpeed, Constants.MaxAutoDriveSpeed);
     if (speedPID.atSetpoint()) {
       speed = 0;
     }

@@ -29,6 +29,7 @@ private Joystick towerJoy;
   @Override
   public void execute() {
     towerSub.runMotors(towerJoy.getY()*Constants.MaxTowerSpeed*0.6);
+    
     if (towerJoy.getRawButton(11)) {
       if (towerJoy.getRawButtonPressed(10)) {
         towerSub.zeroEncoders();

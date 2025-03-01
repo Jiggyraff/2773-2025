@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,7 +24,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
-import frc.robot.Autonomous.LockOnTagCommand;
+import frc.robot.Autonomous.LookForTagCommand;
+import frc.robot.Autonomous.MoveElevatorCommand;
+import frc.robot.Autonomous.PerfectPoseDifferenceCommand;
 import frc.robot.Autonomous.PolarMoveCommand;
 import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
@@ -56,16 +61,20 @@ public class RobotContainer {
   LaserSubsystem laserSub = new LaserSubsystem(driveSub, tagSub, odomSub);
   TowerSubsystem towerSub = new TowerSubsystem();
   ClimberSubsystem climbSub = new ClimberSubsystem();
-
+  
   // Commands from files
   HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
   TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
   ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
   SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
+  LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub, laserSub);
+  MoveElevatorCommand moveToMaxHeight = new MoveElevatorCommand(1, towerSub);
   {
     driveSub.setDefaultCommand(driveCommand);
     climbSub.setDefaultCommand(climberCommand);
     towerSub.setDefaultCommand(simpleTowerCommand);
+    tagSub.setDefaultCommand(lookForTagCommand);
+    NamedCommands.registerCommand("Elevator Max Height", moveToMaxHeight);
   }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -114,7 +123,6 @@ public class RobotContainer {
       new DeltaPoseCommand(0, -0.5, Math.PI, driveSub, odomSub).andThen(
           new DeltaPoseCommand(-2, 0, -Math.PI / 2, driveSub, odomSub)));
 
-  SequentialCommandGroup findAndApproachTag = new LockOnTagCommand(tagSub, laserSub).andThen();
   // Buttons
   // driveStick
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
@@ -132,9 +140,18 @@ public class RobotContainer {
       }
       towerSub.getDefaultCommand().schedule();
     }));
+
   }
 
-  public Command getAutonomousCommand() {
-    return findAndApproachTag;
+  public Command getAutonomousCommand(String autoChosen) {
+    switch (autoChosen){
+      case "Auto 1": return new PathPlannerAuto("New Path");
+      case "Auto 2": return null;
+      case "Auto 3": return null;
+      case "Auto 4": return null;
+      case "Auto 5": return null;
+      case "Auto 6": return null;
+            default: return null;
+    }
   }
 }

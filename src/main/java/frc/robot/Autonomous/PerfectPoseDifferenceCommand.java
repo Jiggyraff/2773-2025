@@ -4,6 +4,7 @@
 
 package frc.robot.Autonomous;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -59,13 +60,12 @@ public class PerfectPoseDifferenceCommand extends Command {
     goalX = initX + differenceX;
     goalY = initY + differenceY;
     goalR = initR + differenceR;
+    System.out.println();
 
     for (int i = 0; i < 4; i++) {
       goalSwervePositions[i][0] = Math.cos(Math.PI/4 + Math.PI*(i+1) + goalR) * Constants.DistanceBetweenWheels/2 + goalX;
       goalSwervePositions[i][1] = Math.sin(Math.PI/4 + Math.PI*(i+1) + goalR) * Constants.DistanceBetweenWheels/2 + goalY;
-    }
-
-    for (int i = 0; i < 4; i++) {
+    
       swervePositions[i][0] = Math.cos(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getX();
       swervePositions[i][1] = Math.sin(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getY();
     }
@@ -80,13 +80,13 @@ public class PerfectPoseDifferenceCommand extends Command {
   @Override
   public void execute() {
     for (int i = 0; i < 4; i++) {
-      swervePositions[i][0] = Math.cos(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getX();
-      swervePositions[i][1] = Math.sin(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getY();
-    }
-    double[][] swerveStates = new double[4][2];   //[angle, speed]
-    for (int i = 0; i < 4; i++) {
-      swerveStates[i][0] = Math.atan2(goalSwervePositions[i][0] - swervePositions[i][0], goalSwervePositions[i][1] - swervePositions[i][1]);
-      swerveStates[i][1] = drivePID[i].calculate(Math.sqrt(goalSwervePositions[i][0] - swervePositions[i][0] + goalSwervePositions[i][1] - swervePositions[i][1]));
+      double x = swervePositions[i][0] = Math.cos(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getX();
+      double y = swervePositions[i][1] = Math.sin(Math.PI/4 + Math.PI*(i+1) + odomSub.getGyroAngle()) * Constants.DistanceBetweenWheels/2 + odomSub.getY();
+
+      double angle = Math.atan2(goalSwervePositions[i][0] - x, goalSwervePositions[i][1] - y);
+      double speed = MathUtil.clamp(drivePID[i].calculate(Math.sqrt(Math.pow(goalSwervePositions[i][0] - x, 2) + Math.pow(goalSwervePositions[i][1] - y, 2))), -Constants.MaxDriveSpeed, Constants.MaxDriveSpeed);
+      System.out.println("Motor Stats: Motor: " + i + "; X: " + x + "; Y: " + y + "; Angle: " + angle + "; Speed: " + speed);
+      driveSub.modules[i].directionalDrive(angle, speed);
     }
   }
 

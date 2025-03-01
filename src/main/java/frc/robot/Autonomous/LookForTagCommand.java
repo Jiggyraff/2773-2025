@@ -11,12 +11,12 @@ import frc.robot.Information.LaserSubsystem;
 import frc.robot.Information.TagSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LockOnTagCommand extends Command {
+public class LookForTagCommand extends Command {
   TagSubsystem tagSub;
   LaserSubsystem laserSub;
   PIDController motorPID = new PIDController(0.63, 0, 0);
   /** Creates a new LockOnTagCommand. */
-  public LockOnTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
+  public LookForTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.tagSub = tagSub;
     this.laserSub = laserSub;

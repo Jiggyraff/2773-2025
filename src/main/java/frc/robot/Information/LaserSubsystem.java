@@ -34,7 +34,6 @@ import frc.robot.SwerveSubsystems.SwerveDriveModule;
 public class LaserSubsystem extends SubsystemBase {
   
   DriveSubsystem driveSub;
-  TagSubsystem tagSub;
   OdometrySubsystem odomSub;
 
 
@@ -51,7 +50,7 @@ public class LaserSubsystem extends SubsystemBase {
   
   
   /** Creates a new KinematicsSubsystem. */
-  public LaserSubsystem(DriveSubsystem driveSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
+  public LaserSubsystem(DriveSubsystem driveSub, OdometrySubsystem odomSub) {
     Shuffleboard.getTab("Odometry").addDouble("Laser Distance (mm)", () -> {return laserDistance;});
     Shuffleboard.getTab("Odometry").addDouble("Laser Motor (Radians)", () -> {return getMotorPosition();});
     // try {
@@ -62,8 +61,8 @@ public class LaserSubsystem extends SubsystemBase {
     //     }
 
     this.driveSub = driveSub;
-    this.tagSub = tagSub;
     this.odomSub = odomSub;
+    setAngle(0);
   }
   RelativeEncoder encoder = motor.getEncoder();
   double setAngle = 0;
@@ -113,12 +112,17 @@ public class LaserSubsystem extends SubsystemBase {
     while (angle < -Math.PI) {
       angle += 2*Math.PI;
     }
-    setMotorPosition(angle);
+    
+    pid.setSetpoint(angle);
+    double speed = MathUtil.clamp(pid.calculate(getMotorPosition()), -0.15, 0.15);
+    motor.set(speed);
+    // System.out.println("Position: " + getMotorPosition() + ", Set Angle: " + pid.getSetpoint());
   }
   
   public void setAngleDifference(double d) {
-    setAngle = setAngle + d;
+    setAngle += d;
   }
+
 
   public double getMotorPosition() {
     double d = (encoder.getPosition()/10)*Math.PI*2;
@@ -132,17 +136,18 @@ public class LaserSubsystem extends SubsystemBase {
   }
 
           
-  private void setMotorPosition(double setAngle2) {
+  public void setAngle(double setAngle2) {
     while (setAngle2 > Math.PI) {
       setAngle2 -= 2*Math.PI;
     }
     while (setAngle2 < -Math.PI) {
       setAngle2 += 2*Math.PI;
     }
-    pid.setSetpoint(setAngle2);
-    double speed = MathUtil.clamp(pid.calculate(getMotorPosition()), -0.15, 0.15);
-    motor.set(speed);
-    // System.out.println("Position: " + getMotorPosition() + ", Set Angle: " + setAngle2);
+    setAngle = setAngle2;
+  }
+
+  public double getRelativeMotorPosition() {
+    return getMotorPosition() - Math.PI/2;
   }
 
   public Double getData() {
@@ -166,5 +171,9 @@ public class LaserSubsystem extends SubsystemBase {
 
   public void setEncoderZero() {
     encoder.setPosition(0);
+  }
+
+  public double getGyroAngle() {
+    return odomSub.getGyroAngle();
   }
 }

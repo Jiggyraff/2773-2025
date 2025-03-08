@@ -34,10 +34,37 @@ public class DeltaPoseCommand extends Command {
 
   /** Creates a new MovePolarCommand. */
   public DeltaPoseCommand(double goalX, double goalY, double goalRotation, DriveSubsystem driveSubsystem, OdometrySubsystem odomSub) {
-    addRequirements(driveSubsystem);
+    addRequirements(driveSubsystem, odomSub);
     this.goalX = goalX;
     this.goalY = goalY;
     this.goalRotation = goalRotation;
+    this.driveSubsystem = driveSubsystem;
+    this.odomSub = odomSub;
+    speedPID = driveSubsystem.getPID();
+    // Shuffleboard.getTab("Delta Pose").addDouble("Speed" + goalX+goalY+goalRotation, () -> {return speed;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("Angle" + goalX+goalY+goalRotation, () -> {return radians;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("InitX" + goalX+goalY+goalRotation, () -> {return initX;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("InitY" + goalX+goalY+goalRotation, () -> {return initY;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("GoalX" + goalX+goalY+goalRotation, () -> {return goalX;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("GoalY" + goalX+goalY+goalRotation, () -> {return goalY;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("X Left" + goalX+goalY+goalRotation, () -> {return dx;});
+    // Shuffleboard.getTab("Delta Pose").addDouble("Y Left" + goalX+goalY+goalRotation, () -> {return dy;});
+    // Shuffleboard.getTab("Delta Pose").addBoolean("Stopped" + goalX+goalY+goalRotation, () -> {return isFinished();});
+  }
+
+  public DeltaPoseCommand(double goalX, double goalY, String rotationString, DriveSubsystem driveSubsystem, OdometrySubsystem odomSub) {
+    addRequirements(driveSubsystem, odomSub);
+    this.goalX = goalX;
+    this.goalY = goalY;
+    if (rotationString.equals("left")) {
+      goalRotation = -Math.PI/2;
+    } else if (rotationString.equals("right")) {
+      goalRotation = Math.PI/2;
+    } else if (rotationString.equals("forward")) {
+      goalRotation = 0;
+    } else if (rotationString.equals("backwards")) {
+      goalRotation = Math.PI;
+    }
     this.driveSubsystem = driveSubsystem;
     this.odomSub = odomSub;
     speedPID = driveSubsystem.getPID();
@@ -95,7 +122,7 @@ public class DeltaPoseCommand extends Command {
     if (speedPID.atSetpoint()) {
       speed = 0;
     }
-    System.out.println("Radians: " + radians + " Rotation: " + odomSub.getGyroAngle() + " Distance Left: " + distanceLeft + "Dx: " + odomSub.getX() + "Dy: " + odomSub.getY());
+    // System.out.println("Radians: " + radians + " Rotation: " + odomSub.getGyroAngle() + " Distance Left: " + distanceLeft + "Dx: " + odomSub.getX() + "Dy: " + odomSub.getY());
     driveSubsystem.directionalDrive(speed, radians, rspeed);
     
     speedSum += speed;

@@ -34,12 +34,14 @@ public class TagSubsystem extends SubsystemBase {
     private String lastInput;
     
     //Subsystem state variables
-    private Boolean isEnabled = false;     //Deactivates everything
+    private Boolean isEnabled = true;     //Deactivates everything
     private Boolean syncTags = false;       //Stops feeding to nav
     private Boolean cautiousMode = false;  //Checks if the data *could* be reliable based off parameters
     private Boolean seesTag = false;
     private double alphaTolerance = 0.1;
     private double XCom;
+
+    private LaserSubsystem laserSub;
 
     //Tag Data Stuff
     TagData lastTag;
@@ -69,18 +71,14 @@ public class TagSubsystem extends SubsystemBase {
             {21, 209.49, 158.50, 12.13, 0,   0},
             {22, 193.10, 130.17, 12.13, 300, 0}};
 
+    double[][] currentTagPolars = new double[22][2];
+
         //https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings.pdf
         //+X is distance along length of field from BLUE reef side
         //+Y is distance along short side of field from RED barge/processor
         //+Z is up from ground
         //Zrot is rotation around Z axis, with 0 being facing towards RED reef
         //Yrot is rotation around Y axis, with 0 being facing forward. Weird values tho, 5 and 15 should not be the same
-
-    public static TagData[] lastAprilTagData = new TagData[30];
-
-    public TagData getAprilTag(int id) {
-        return lastAprilTagData[id];
-    }
 
 
     public static class TagData{
@@ -92,8 +90,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public TagSubsystem(OdometrySubsystem odomSub) {
-        syncTags = true;
+    public TagSubsystem(OdometrySubsystem odomSub, LaserSubsystem laserSub) {
         this.odomSub = odomSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
@@ -110,6 +107,7 @@ public class TagSubsystem extends SubsystemBase {
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
         Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
         Shuffleboard.getTab("April Tag Data").addBoolean("Sees Tag", () -> {return seesTag;});
+        this.laserSub = laserSub;
     }
 
     @Override
@@ -118,8 +116,9 @@ public class TagSubsystem extends SubsystemBase {
         if (isEnabled) {
             receivePacket();
         }
+        graphTagPolars();
     }
-    
+        
     TagData data;
     int deadTimer = 0;
     private void receivePacket() {
@@ -134,9 +133,8 @@ public class TagSubsystem extends SubsystemBase {
                 data = parseTagData(rawText);
                 // System.out.println(data);
                 if (data != null) {
-                    // updateOdometry(data);
-                    updateTags(data);
                     lastTag = data;
+                    System.out.println("Sees Tag");
                     seesTag = true;
                     // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
                     deadTimer = 0;
@@ -144,10 +142,11 @@ public class TagSubsystem extends SubsystemBase {
                 buffer.clear();
 
             } else {
-                // System.out.println("Null tag:" + deadTimer);
                 deadTimer++;
+                buffer.clear();
             } 
-            if (deadTimer == 20) {
+            // System.out.println(String.valueOf(channel.receive(buffer)));
+            if (deadTimer == 10) {
                 // System.out.println("No tag in sight");
                 seesTag = false;
             }
@@ -168,19 +167,30 @@ public class TagSubsystem extends SubsystemBase {
             double y = laserDistance*Math.sin(angleFromHorizontal) + aprilTagPositions[data.aprilTagID-1][2] * 0.0254;
             double radians = aprilTagPositions[data.aprilTagID-1][4]*Math.PI/180 - Math.PI - data.alpha;
             odomSub.setPose(x, y, radians);
-            // System.out.println("Laser:" + laserDistance*Math.cos(angleFromHorizontal));
         }
     }
 
+    // private void distanceUpdateOdometry() {
+    //     if (data != null) {
+    //     double angleBetweenRobotAndTag = laserSub.getRelativeMotorPosition() - odomSub.getGyroAngle() + Math.PI;
+    //     double dx = Math.cos(angleBetweenRobotAndTag) * data.z;
+    //     double dy = Math.sin(angleBetweenRobotAndTag) * data.z;
+    //     dx += aprilTagPositions[data.aprilTagID][1];
+    //     dy += aprilTagPositions[data.aprilTagID][2];
+    //     odomSub.setPose(dx, dy, odomSub.getGyroAngle());
+    //     }
+    // }
+
     public TagData parseTagData(String s) {
-        /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123; 123 123 123; 123 */
+        /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123;123 123 123; 123 */
         // System.out.println(s);
-        String[] tokens = s.split(";");  
+        String[] tokens = s.split("; ");  
         String[] ids = tokens[0].split(": ");
-        if (!ids[0].equals("TAG") || tokens.length < 4) {
+        if (!ids[0].equals("TAG_FOUND") || tokens.length < 4) {
             return null;
         }
-        XCom = Double.parseDouble(tokens[2].split(" ")[0]);
+        // System.out.println(";" + tokens[2].split(" ")[0] + ";");
+        XCom = Double.parseDouble(tokens[1].split(" ")[6]);
         String TagMatrix = tokens[1];
 
         String apriltag = ids[1];
@@ -230,34 +240,14 @@ public class TagSubsystem extends SubsystemBase {
         data.alpha = Math.acos(cosAlpha);
         data.aprilTagID = Integer.parseInt(apriltag);
 
-        if (syncTags) {
+        if (syncTags == true) {
             updateOdometry(data);
         }
         // System.out.println("Tag: "+rotationMatrix.get(0, 3) + " : "  + rotationMatrix.get(1, 3) + " : "  + rotationMatrix.get(2, 3) + " : " + data.alpha);
         return data;
     }
 
-    public void updateTags(TagData dataToUpdate)
-    {
-        lastAprilTagData[dataToUpdate.aprilTagID] = dataToUpdate;
-    }
 
-    // public int getSpeakerTagID()
-    // {
-    //     if(DriverStation.getAlliance().equals(Alliance.Red)) {
-    //         return Constants.speakerTagIDRed;
-    //     }
-    //     else return Constants.speakerTagIDBlue;
-    // }
-    public double getLastSpeakerDistance()
-    {
-        // TagData tempData = getAprilTag(getSpeakerTagID());
-        return 4.0;//Math.sqrt(tempData.x * tempData.x + tempData.z * tempData.z);
-    }
-    public void printAlliance()
-    {
-        System.out.println(DriverStation.getAlliance());
-    }
 
     public void enable() {
         if (syncTags) {
@@ -279,30 +269,30 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    double[] laserSum = new double[10];
-    int laserN = 0;
-    public void setDistance(double d) {
-        if (laserN != 10) {
-            laserSum[laserN] = d;
-            laserN++;
-        } else {
-            double laserAverage = 0.0;
-            double laserAverage2 = 0.0;
-            for (int i = 0; i < laserSum.length;i++) {
-                laserAverage += laserSum[i];
-            }
-            laserAverage /= 10;
-            int n = 0;
-            for (int i = 0; i < laserSum.length; i++) {
-                if (laserSum[i] > laserAverage) {
-                    laserAverage2 += laserSum[i];
-                    n++;
-                }
-            }
-            laserAverage2 /= n;
-            laserDistance = laserAverage2/1000;
-        }
-    }
+    // double[] laserSum = new double[10];
+    // int laserN = 0;
+    // public void setDistance(double d) {
+    //     if (laserN != 10) {
+    //         laserSum[laserN] = d;
+    //         laserN++;
+    //     } else {
+    //         double laserAverage = 0.0;
+    //         double laserAverage2 = 0.0;
+    //         for (int i = 0; i < laserSum.length;i++) {
+    //             laserAverage += laserSum[i];
+    //         }
+    //         laserAverage /= 10;
+    //         int n = 0;
+    //         for (int i = 0; i < laserSum.length; i++) {
+    //             if (laserSum[i] > laserAverage) {
+    //                 laserAverage2 += laserSum[i];
+    //                 n++;
+    //             }
+    //         }
+    //         laserAverage2 /= n;
+    //         laserDistance = laserAverage2/1000;
+    //     }
+    // }
 
     public Boolean getSeestag() {
         // System.out.println("Sees Tag: " + seesTag);
@@ -310,10 +300,31 @@ public class TagSubsystem extends SubsystemBase {
     }
 
     public double getXCom() {
-        return -1.0;
+        return XCom;
     }
 
     public void reset() {
         seesTag = false;
+    }
+
+    //Assumes robot's position is in meters and is field centric
+    private void graphTagPolars() {
+        for (int i = 0; i < currentTagPolars.length; i++) {
+            double dx = aprilTagPositions[i][1] * 0.0254 - odomSub.getY();
+            double dy = aprilTagPositions[i][2] * 0.0254 - odomSub.getX();
+            currentTagPolars[i][0] = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+            //From robot to tag
+            currentTagPolars[i][1] = Math.atan2(dy, dx);
+        }
+    }
+
+    public double[] getNearestTag() {
+        double[] nearestTag = {999, 0};
+        for (int i = 0; i < currentTagPolars.length; i++) {
+            if (currentTagPolars[i][0] < nearestTag[0]) {
+                nearestTag = currentTagPolars[i];
+            }
+        }
+        return nearestTag;
     }
 }

@@ -157,7 +157,7 @@ public class OdometrySubsystem extends SubsystemBase {
 
     public void setPose(double x, double y, double rotation) {
         pose = new Pose2d(x, y, new Rotation2d(rotation));
-        System.out.println("X: " + x + " Y: " + y);
+        // System.out.println("X: " + x + " Y: " + y);
         m_odometry.resetPose(pose);
     }
 

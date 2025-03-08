@@ -23,19 +23,26 @@ public class TowerControlCommand extends Command {
   @Override
   public void initialize() {
     towerSub.setAutomatic(true);
-    towerSub.runMotors(0);
+    towerSub.runElevatorMotors(0);
   }
   
   @Override
   public void execute() {
     towerSub.setDifferenceHeight(joy.getY() * Constants.MaxTowerSpeed);
+    if (joy.getRawButton(2)) {
+      towerSub.setAlgaeMotors(-1);
+    } else if (joy.getRawButton(3)) {
+      towerSub.setAlgaeMotors(1);
+    } else {
+      towerSub.setAlgaeMotors(0);
+    }
     
 
   }
 
   @Override
   public void end(boolean interrupted) {
-    towerSub.stopMotors();
+    towerSub.stopElevatorMotors();
   }
 
   @Override

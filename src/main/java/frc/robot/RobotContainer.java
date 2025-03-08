@@ -32,7 +32,7 @@ import frc.robot.Autonomous.RotateToRadiansCommand;
 import frc.robot.Autonomous.RotateToCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
-import frc.robot.OtherSubsystems.ClimberSubsystem;
+// import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
 /**
@@ -57,24 +57,23 @@ public class RobotContainer {
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
-  TagSubsystem tagSub = new TagSubsystem(odomSub);
-  LaserSubsystem laserSub = new LaserSubsystem(driveSub, tagSub, odomSub);
+  LaserSubsystem laserSub = new LaserSubsystem(driveSub, odomSub);
+  TagSubsystem tagSub = new TagSubsystem(odomSub, laserSub);
   TowerSubsystem towerSub = new TowerSubsystem();
-  ClimberSubsystem climbSub = new ClimberSubsystem();
+  // ClimberSubsystem climbSub = new ClimberSubsystem();
   
   // Commands from files
   HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
   TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
-  ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
+  // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
   SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
   LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub, laserSub);
   MoveElevatorCommand moveToMaxHeight = new MoveElevatorCommand(1, towerSub);
   {
     driveSub.setDefaultCommand(driveCommand);
-    climbSub.setDefaultCommand(climberCommand);
-    towerSub.setDefaultCommand(towerCommand);
+    // climbSub.setDefaultCommand(climberCommand);
+    towerSub.setDefaultCommand(simpleTowerCommand);
     tagSub.setDefaultCommand(lookForTagCommand);
-    NamedCommands.registerCommand("Elevator Max Height", moveToMaxHeight);
   }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -149,12 +148,40 @@ public class RobotContainer {
     new MoveElevatorCommand(0, towerSub)
   ));
 
+  SequentialCommandGroup doATwirl = new ParallelCommandGroup(
+    new DeltaPoseCommand(0, 1, -Math.PI, driveSub, odomSub),
+    new MoveElevatorCommand(0.25, towerSub)
+  ).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(-1, -1, Math.PI, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(1, -1, Math.PI, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(1, 1, 0, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(-1, -1, Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(-1, 1, Math.PI, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(1, 1, -Math.PI/2, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  )).andThen(new ParallelCommandGroup(
+    new DeltaPoseCommand(0, -1, 0, driveSub, odomSub),
+    new MoveElevatorCommand(0.5, towerSub)
+  ));
+
+  // SequentialCommandGroup doASmallTwirl = 
+
   public Command getAutonomousCommand(String autoChosen) {
     switch (autoChosen){
       case "Auto 1": return new PathPlannerAuto("Do A Flip");
       case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
       case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
-      case "Auto 4": return new DeltaPoseCommand(-1.5, -0.5, 0, driveSub, odomSub);
+      case "Auto 4": return doATwirl;
       case "Auto 5": return doADance;
       case "Auto 6": return heightLadder;
             default: return null;

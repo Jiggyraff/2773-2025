@@ -102,13 +102,15 @@ public class HOTASDriveCommand extends Command {
     }
     if (buttonPressed(3)) {
       laserSub.setAngleDifference(0.05);
+      // System.out.println("lk");
     }
     if (buttonPressed(4)) {
       laserSub.setAngleDifference(-0.05);
+      // System.out.println("iiih");
     }
     if (buttonPressed(7) && buttonOnPress(8)) {
       laserSub.setEncoderZero();
-      System.out.println("Position Reset Manually");
+      System.out.println("Laser position Reset Manually");
     }
   }
 

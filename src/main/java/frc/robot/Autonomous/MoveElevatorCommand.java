@@ -15,7 +15,7 @@ public class MoveElevatorCommand extends Command {
 
   /** Creates a new MoveElevatorCommand. */
   public MoveElevatorCommand(double h, TowerSubsystem towerSub) {
-    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(towerSub);
     this.towerSub = towerSub;
     this.h = h;
   }
@@ -38,6 +38,6 @@ public class MoveElevatorCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return towerSub.atSetpoint();
+    return towerSub.elevatorAtSetpoint();
   }
 }

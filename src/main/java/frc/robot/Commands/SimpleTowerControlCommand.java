@@ -28,11 +28,11 @@ private Joystick towerJoy;
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    towerSub.runMotors(towerJoy.getY()*Constants.MaxTowerSpeed*0.6);
+    towerSub.runElevatorMotors(towerJoy.getY()*Constants.MaxTowerSpeed*0.6);
     
     if (towerJoy.getRawButton(11)) {
       if (towerJoy.getRawButtonPressed(10)) {
-        towerSub.zeroEncoders();
+        towerSub.zeroElevatorEncoders();
       }
     }
   }
@@ -40,7 +40,7 @@ private Joystick towerJoy;
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    towerSub.stopMotors();
+    towerSub.stopElevatorMotors();
   }
 
   // Returns true when the command should end.

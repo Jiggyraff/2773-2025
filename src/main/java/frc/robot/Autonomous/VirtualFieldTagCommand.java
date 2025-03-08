@@ -11,12 +11,12 @@ import frc.robot.Information.LaserSubsystem;
 import frc.robot.Information.TagSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class LookForTagCommand extends Command {
+public class VirtualFieldTagCommand extends Command {
   TagSubsystem tagSub;
   LaserSubsystem laserSub;
   PIDController motorPID = new PIDController(0.15, 0, 0);
   /** Creates a new LockOnTagCommand. */
-  public LookForTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
+  public VirtualFieldTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
     addRequirements(tagSub);
     // Use addRequirements() here to declare subsystem dependencies.
     this.tagSub = tagSub;
@@ -38,8 +38,7 @@ public class LookForTagCommand extends Command {
     if (c == 2) {
       System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
       if (!tagSub.getSeestag()) {
-        laserSub.setAngleDifference(0.05);
-        // System.out.println(tagSub.getSeestag());
+        laserSub.setAngle(tagSub.getNearestTag()[1] - Math.PI/2 + laserSub.getGyroAngle());
       } else {
         double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.05, 0.05);
         laserSub.setAngleDifference(speed);

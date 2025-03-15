@@ -43,7 +43,8 @@ public class ClimberSubsystem extends SubsystemBase {
         motor.set(speed);
     }
 
-    public void setServo(double s) {
-        servo.set(s);
+    public void setServo(double t) {
+        servo.set(t);
     }
+
 }

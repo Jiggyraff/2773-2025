@@ -28,7 +28,7 @@ import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.MoveElevatorCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
-// import frc.robot.OtherSubsystems.ClimberSubsystem;
+import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
 /**
@@ -55,18 +55,18 @@ public class RobotContainer {
             OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
             TagSubsystem tagSub = new TagSubsystem(odomSub);
             TowerSubsystem towerSub = new TowerSubsystem();
-            // ClimberSubsystem climbSub = new ClimberSubsystem();
+            ClimberSubsystem climbSub = new ClimberSubsystem();
 
             // Controller commands
             HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
             TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
-            // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
+            ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
             SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
             LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
 
             {
               driveSub.setDefaultCommand(driveCommand);
-              // climbSub.setDefaultCommand(climberCommand);
+              climbSub.setDefaultCommand(climberCommand);
               towerSub.setDefaultCommand(simpleTowerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
             }

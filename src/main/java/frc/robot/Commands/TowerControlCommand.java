@@ -25,7 +25,7 @@ public class TowerControlCommand extends Command {
     towerSub.setAutomatic(true);
     towerSub.runElevatorMotors(0);
   }
-  
+
   @Override
   public void execute() {
     towerSub.setDifferenceHeight(joy.getY() * Constants.MaxTowerSpeed);
@@ -36,7 +36,7 @@ public class TowerControlCommand extends Command {
     } else {
       towerSub.setAlgaeMotors(0);
     }
-    
+
     // panic button
     if (joy.getRawButton(1) && joy.getRawButtonPressed(2)) {
       towerSub.stopElevatorMotors();

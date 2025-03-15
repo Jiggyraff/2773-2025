@@ -37,10 +37,10 @@ public class VirtualFieldTagCommand extends Command {
     if (c == 2) {
       System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
       if (!tagSub.getSeestag()) {
-        tagSub.setAngle(tagSub.getNearestTag()[1] - Math.PI/2 + tagSub.getGyroAngle());
+        tagSub.setRelativeAngle(tagSub.getNearestTag()[1] - Math.PI/2 + tagSub.getGyroAngle());
       } else {
         double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.05, 0.05);
-        tagSub.setAngleDifference(speed);
+        tagSub.setPositionDifference(speed);
       }
       c = 0;
     } else {

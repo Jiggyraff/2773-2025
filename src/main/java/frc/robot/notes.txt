@@ -5,8 +5,10 @@ TODO:
 2. Finish experimental tag virtual field
     - Set physical angle constaints
 3. High Priority: Change tag motor code to utilize servo
+    - Read servo max degrees
 4. Create proper heights for autos
 5. Set up advantage scope
+6. Calibrate cam effective offset
 
 NOTES:
 The climber code is currently commented: ClimberControlCommand, ClimberSubsystem, RobotContainer initialization

@@ -37,11 +37,11 @@ public class LookForTagCommand extends Command {
     if (c == 2) {
       System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
       if (!tagSub.getSeestag()) {
-        tagSub.setAngleDifference(0.05);
+        tagSub.setPositionDifference(0.05);
         // System.out.println(tagSub.getSeestag());
       } else {
         double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.05, 0.05);
-        tagSub.setAngleDifference(speed);
+        tagSub.setPositionDifference(speed);
       }
       c = 0;
     } else {

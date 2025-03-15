@@ -5,34 +5,25 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkMax;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TagSubsystem extends SubsystemBase {
     //Subsystems
     OdometrySubsystem odomSub;
 
     //Motor control variables
-    SparkMax motor = new SparkMax(14, frc.robot.Constants.motorType);
-    RelativeEncoder encoder = motor.getEncoder();
-    private double setAngle = 0.0;
+    Servo servo = new Servo(999);
+    //Absolute max value of the servo, ssuming min is zero.
+    double maxPosition;
+    double minPosition;
+    double posDifference = maxPosition - minPosition;
+    double setPosition;
     PIDController pid = new PIDController(0.1, 0, 0);
 
     // PORT
@@ -52,6 +43,8 @@ public class TagSubsystem extends SubsystemBase {
     private Boolean seesTag = false;
     private double alphaTolerance = 0.1;
     private double XCom;
+    //The offset a tag can be from the center of a camera to still be seen/be accurate
+    private final double effectiveOffset = 70;
 
 
     //Tag Data Stuff
@@ -82,7 +75,7 @@ public class TagSubsystem extends SubsystemBase {
             {21, 209.49, 158.50, 12.13, 0,   0},
             {22, 193.10, 130.17, 12.13, 300, 0}};
 
-    double[][] currentTagPolars = new double[22][2];
+    double[][] currentTagPolars = new double[22][3];
 
         //https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings.pdf
         //+X is distance along length of field from BLUE reef side
@@ -108,7 +101,7 @@ public class TagSubsystem extends SubsystemBase {
             this.channel = DatagramChannel.open().bind(address);
             this.channel.configureBlocking(false);
             //this.isEnabled = true;
-            } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {return data != null ? new double[] {data.aprilTagID} : new double[]{};});
@@ -131,17 +124,15 @@ public class TagSubsystem extends SubsystemBase {
         graphTagPolars();
 
         //For motor
-        double angle = setAngle + odomSub.getGyroAngle();
-        while (angle > Math.PI) {
-          angle -= 2*Math.PI;
+        double angle = setPosition + (odomSub.getGyroAngle()/Math.PI) * ((posDifference)/2);
+        while (angle > maxPosition) {
+          angle -= posDifference;
         }
-        while (angle < -Math.PI) {
-          angle += 2*Math.PI;
+        while (angle < minPosition) {
+          angle += posDifference;
         }
 
-        pid.setSetpoint(angle);
-        double speed = MathUtil.clamp(pid.calculate(getMotorPosition()), -0.15, 0.15);
-        motor.set(speed);
+        servo.set(setPosition);
     }
         
     TagData data;
@@ -307,13 +298,15 @@ public class TagSubsystem extends SubsystemBase {
             currentTagPolars[i][0] = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
             //From robot to tag
             currentTagPolars[i][1] = Math.atan2(dy, dx);
+            //Can see tag?
+            currentTagPolars[i][2] = Math.abs(Math.atan2(dy, dx) * (180/Math.PI)) < effectiveOffset ? 1 : 0; 
         }
     }
 
     public double[] getNearestTag() {
         double[] nearestTag = {999, 0};
         for (int i = 0; i < currentTagPolars.length; i++) {
-            if (currentTagPolars[i][0] < nearestTag[0]) {
+            if (currentTagPolars[i][0] < nearestTag[0] && currentTagPolars[i][2] == 1) {
                 nearestTag = currentTagPolars[i];
             }
         }
@@ -321,39 +314,33 @@ public class TagSubsystem extends SubsystemBase {
     }
 
     //COMMANDS FOR MOTOR CONTROL
-    public void setAngleDifference(double d) {
-        setAngle += d;
-      }
-    
-    
-    public double getMotorPosition() {
-      double d = (encoder.getPosition()/10)*Math.PI*2;
-      while (d > Math.PI) {
-        d -= 2*Math.PI;
-      }
-      while (d < -Math.PI) {
-        d += 2*Math.PI;
-      }
-      return d;
+    public void setPositionDifference(double d) {
+        setRelativeAngle(d + getRelativeAngle());
     }
 
-            
-    public void setAngle(double setAngle2) {
-      while (setAngle2 > Math.PI) {
-        setAngle2 -= 2*Math.PI;
-      }
-      while (setAngle2 < -Math.PI) {
-        setAngle2 += 2*Math.PI;
-      }
-      setAngle = setAngle2;
+    private void setPosition(double pos) {
+        setPosition = pos;
     }
 
-    public double getRelativeMotorPosition() {
-      return getMotorPosition() - Math.PI/2;
+    public double getPosition() {
+        return servo.get();
     }
-    
-    public void setEncoderZero() {
-      encoder.setPosition(0);
+
+    //Sets the servo relative from pi to neg pi
+    public void setRelativeAngle(double setAngle2) {
+        double pos = (setAngle2/Math.PI + 0.5) * (posDifference) + minPosition;
+        while (pos > maxPosition) {
+            pos -= 2 * Math.PI;
+        }
+        while (pos < maxPosition) {
+            pos += 2 * Math.PI;
+        }
+        setPosition(pos);
+    }
+
+    //Returns position from pi to neg pi
+    public double getRelativeAngle() {
+      return (maxPosition / (servo.get() - minPosition) - (posDifference)/2) * Math.PI;
     }
 
     public double getGyroAngle() {

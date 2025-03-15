@@ -5,8 +5,13 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -14,6 +19,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -22,6 +28,12 @@ import frc.robot.SwerveSubsystems.DriveSubsystem;
 public class TagSubsystem extends SubsystemBase {
     //Subsystems
     OdometrySubsystem odomSub;
+
+    //Motor control variables
+    SparkMax motor = new SparkMax(14, frc.robot.Constants.motorType);
+    RelativeEncoder encoder = motor.getEncoder();
+    private double setAngle = 0.0;
+    PIDController pid = new PIDController(0.1, 0, 0);
 
     // PORT
     private final int PORT = 5800;
@@ -41,7 +53,6 @@ public class TagSubsystem extends SubsystemBase {
     private double alphaTolerance = 0.1;
     private double XCom;
 
-    private LaserSubsystem laserSub;
 
     //Tag Data Stuff
     TagData lastTag;
@@ -90,7 +101,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public TagSubsystem(OdometrySubsystem odomSub, LaserSubsystem laserSub) {
+    public TagSubsystem(OdometrySubsystem odomSub) {
         this.odomSub = odomSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
@@ -107,7 +118,6 @@ public class TagSubsystem extends SubsystemBase {
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
         Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
         Shuffleboard.getTab("April Tag Data").addBoolean("Sees Tag", () -> {return seesTag;});
-        this.laserSub = laserSub;
     }
 
     @Override
@@ -116,7 +126,22 @@ public class TagSubsystem extends SubsystemBase {
         if (isEnabled) {
             receivePacket();
         }
+
+        //Experimental
         graphTagPolars();
+
+        //For motor
+        double angle = setAngle + odomSub.getGyroAngle();
+        while (angle > Math.PI) {
+          angle -= 2*Math.PI;
+        }
+        while (angle < -Math.PI) {
+          angle += 2*Math.PI;
+        }
+
+        pid.setSetpoint(angle);
+        double speed = MathUtil.clamp(pid.calculate(getMotorPosition()), -0.15, 0.15);
+        motor.set(speed);
     }
         
     TagData data;
@@ -169,17 +194,6 @@ public class TagSubsystem extends SubsystemBase {
             odomSub.setPose(x, y, radians);
         }
     }
-
-    // private void distanceUpdateOdometry() {
-    //     if (data != null) {
-    //     double angleBetweenRobotAndTag = laserSub.getRelativeMotorPosition() - odomSub.getGyroAngle() + Math.PI;
-    //     double dx = Math.cos(angleBetweenRobotAndTag) * data.z;
-    //     double dy = Math.sin(angleBetweenRobotAndTag) * data.z;
-    //     dx += aprilTagPositions[data.aprilTagID][1];
-    //     dy += aprilTagPositions[data.aprilTagID][2];
-    //     odomSub.setPose(dx, dy, odomSub.getGyroAngle());
-    //     }
-    // }
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123;123 123 123; 123 */
@@ -248,7 +262,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-
+    //Toggles whether or not it updates odom
     public void enable() {
         if (syncTags) {
             syncTags = false;
@@ -259,6 +273,7 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
+    //Toggles cautious mode
     public void cautiousMode() {
         if (cautiousMode) {
             cautiousMode = false;
@@ -269,44 +284,21 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    // double[] laserSum = new double[10];
-    // int laserN = 0;
-    // public void setDistance(double d) {
-    //     if (laserN != 10) {
-    //         laserSum[laserN] = d;
-    //         laserN++;
-    //     } else {
-    //         double laserAverage = 0.0;
-    //         double laserAverage2 = 0.0;
-    //         for (int i = 0; i < laserSum.length;i++) {
-    //             laserAverage += laserSum[i];
-    //         }
-    //         laserAverage /= 10;
-    //         int n = 0;
-    //         for (int i = 0; i < laserSum.length; i++) {
-    //             if (laserSum[i] > laserAverage) {
-    //                 laserAverage2 += laserSum[i];
-    //                 n++;
-    //             }
-    //         }
-    //         laserAverage2 /= n;
-    //         laserDistance = laserAverage2/1000;
-    //     }
-    // }
-
     public Boolean getSeestag() {
-        // System.out.println("Sees Tag: " + seesTag);
         return seesTag;
     }
 
+    //returns x displacement from center of cam POV
     public double getXCom() {
         return XCom;
     }
 
+    //Makes sure it does not falsely see tag
     public void reset() {
         seesTag = false;
     }
 
+    //EXPERIMENTAL VIRTUAL FIELD COMMANDS
     //Assumes robot's position is in meters and is field centric
     private void graphTagPolars() {
         for (int i = 0; i < currentTagPolars.length; i++) {
@@ -326,5 +318,45 @@ public class TagSubsystem extends SubsystemBase {
             }
         }
         return nearestTag;
+    }
+
+    //COMMANDS FOR MOTOR CONTROL
+    public void setAngleDifference(double d) {
+        setAngle += d;
+      }
+    
+    
+    public double getMotorPosition() {
+      double d = (encoder.getPosition()/10)*Math.PI*2;
+      while (d > Math.PI) {
+        d -= 2*Math.PI;
+      }
+      while (d < -Math.PI) {
+        d += 2*Math.PI;
+      }
+      return d;
+    }
+
+            
+    public void setAngle(double setAngle2) {
+      while (setAngle2 > Math.PI) {
+        setAngle2 -= 2*Math.PI;
+      }
+      while (setAngle2 < -Math.PI) {
+        setAngle2 += 2*Math.PI;
+      }
+      setAngle = setAngle2;
+    }
+
+    public double getRelativeMotorPosition() {
+      return getMotorPosition() - Math.PI/2;
+    }
+    
+    public void setEncoderZero() {
+      encoder.setPosition(0);
+    }
+
+    public double getGyroAngle() {
+        return odomSub.getGyroAngle();
     }
 }

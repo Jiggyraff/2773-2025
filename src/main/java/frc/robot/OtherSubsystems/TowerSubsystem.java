@@ -21,6 +21,14 @@ public class TowerSubsystem extends SubsystemBase {
   RelativeEncoder encoder2 = elevatorMotor2.getEncoder();
   SparkMax algaeMotor = new SparkMax(13, SparkMax.MotorType.kBrushless);
   SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
+  SparkMax coralRotateMotor = new SparkMax(999, SparkMax.MotorType.kBrushless);
+  SparkMax coralMotor = new SparkMax(998, SparkMax.MotorType.kBrushless);
+
+  private final double algaeSpeed = 0.0;
+  private final double coralRotateSpeed = 0.0;
+  private final double coralSpeed = 0.0;
+  
+  
   PIDController pid = new PIDController(0.1, 0.001, 0.001);
   
   

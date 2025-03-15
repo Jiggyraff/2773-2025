@@ -37,7 +37,10 @@ public class TowerControlCommand extends Command {
       towerSub.setAlgaeMotors(0);
     }
     
-
+    // panic button
+    if (joy.getRawButton(1) && joy.getRawButtonPressed(2)) {
+      towerSub.stopElevatorMotors();
+    }
   }
 
   @Override

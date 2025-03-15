@@ -29,12 +29,16 @@ public class TowerControlCommand extends Command {
   @Override
   public void execute() {
     towerSub.setDifferenceHeight(joy.getY() * Constants.MaxTowerSpeed);
+    // System.out.println(joy.getRawButton(2));
     if (joy.getRawButton(2)) {
-      towerSub.setAlgaeMotors(-1);
+      towerSub.setAlgaeMotors(-0.2);
     } else if (joy.getRawButton(3)) {
-      towerSub.setAlgaeMotors(1);
+      towerSub.setAlgaeMotors(0.2);
     } else {
       towerSub.setAlgaeMotors(0);
+    }
+    if (joy.getRawButton(10) && joy.getRawButton(11)) {
+      towerSub.zeroElevatorEncoders();
     }
     
 

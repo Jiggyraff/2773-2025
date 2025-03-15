@@ -46,12 +46,13 @@ public class TowerSubsystem extends SubsystemBase {
       speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
           Constants.MaxTowerSpeed);
       runElevatorMotors(speed);
+      // System.out.println(encoder.getPosition());
       // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
       // height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
   }
 
   public void setHeight(double d) {
-    height = MathUtil.clamp(d, -20, 0);
+    height = MathUtil.clamp(d, -18.5, 0);
   }
 
   public void setDifferenceHeight(double d) {

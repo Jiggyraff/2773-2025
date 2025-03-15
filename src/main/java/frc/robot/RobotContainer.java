@@ -72,7 +72,7 @@ public class RobotContainer {
   {
     driveSub.setDefaultCommand(driveCommand);
     // climbSub.setDefaultCommand(climberCommand);
-    towerSub.setDefaultCommand(simpleTowerCommand);
+    towerSub.setDefaultCommand(towerCommand);
     tagSub.setDefaultCommand(lookForTagCommand);
   }
 
@@ -178,21 +178,12 @@ public class RobotContainer {
 
   public Command getAutonomousCommand(String autoChosen) {
     switch (autoChosen){
-<<<<<<< Updated upstream
       case "Auto 1": return new PathPlannerAuto("Do A Flip");
       case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
       case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
       case "Auto 4": return doATwirl;
       case "Auto 5": return doADance;
       case "Auto 6": return heightLadder;
-=======
-      case "Auto 1": return new PathPlannerAuto("New Path");
-      case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, 90, driveSub, odomSub);
-      case "Auto 3": return null;
-      case "Auto 4": return null;
-      case "Auto 5": return null;
-      case "Auto 6": return null;
->>>>>>> Stashed changes
             default: return null;
     }
   }

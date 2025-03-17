@@ -18,7 +18,6 @@ import frc.robot.Constants;
 public class HOTASDriveCommand extends Command {
   private final DriveSubsystem driveSubsystem;
   private final Joystick hotas;
-  private final LaserSubsystem laserSub;
   private final TagSubsystem tagSub;
   private final OdometrySubsystem odomSub;
   private PIDController pid;
@@ -27,10 +26,9 @@ public class HOTASDriveCommand extends Command {
   private double setAngle;
 
   /** Creates a new DriveCommand. */
-  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, LaserSubsystem laserSub, TagSubsystem tagSub, OdometrySubsystem odomSub) {
+  public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, TagSubsystem tagSub, OdometrySubsystem odomSub) {
     this.driveSubsystem = driveSub;
     this.hotas = hotas;
-    this.laserSub = laserSub;
     this.tagSub = tagSub;
     this.odomSub = odomSub;
     this.pid = driveSub.getPID();
@@ -56,14 +54,11 @@ public class HOTASDriveCommand extends Command {
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
     double setSpeed = MathUtil.clamp(Math.sqrt(x * x + y * y)*2, 0,2);
     double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone));
-    // System.out.println(driveSubsystem.blMotor.distanceEncoderPosition() - oldT);
           
     pid.setSetpoint(setSpeed);
     double speed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
     pid.setSetpoint(setRotation);
     double rspeed = pid.calculate(((odomSub.getGyroAngle()-oldG))*2289);
-
-    // System.out.println(speed);
 
 
     if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(setRotation) < Constants.HOTASRotationDeadzone) {
@@ -77,13 +72,6 @@ public class HOTASDriveCommand extends Command {
     oldT = driveSubsystem.averageDistanceEncoder();
     oldG = odomSub.getGyroAngle();
   }
-
-  // public double calculateRotation() {
-  //   PIDController rotatePID = new PIDController(0.1, 0, 0);
-  //   rotatePID.setSetpoint(setAngle);
-  //   // System.out.println(rotatePID.calculate(odomSub.getGyroAngle()));
-  //   return MathUtil.clamp(rotatePID.calculate(odomSub.getGyroAngle())*100, -Constants.RotateSpeedMultiplier, Constants.RotateSpeedMultiplier);
-  // }
 
   public void buttonMicroCommands() {
     if (buttonPressed(7) && buttonOnPress(12)) {
@@ -101,16 +89,12 @@ public class HOTASDriveCommand extends Command {
       tagSub.cautiousMode();
     }
     if (buttonPressed(3)) {
-      laserSub.setAngleDifference(0.05);
+      tagSub.setPositionDifference(0.05);
       // System.out.println("lk");
     }
     if (buttonPressed(4)) {
-      laserSub.setAngleDifference(-0.05);
+      tagSub.setPositionDifference(-0.05);
       // System.out.println("iiih");
-    }
-    if (buttonPressed(7) && buttonOnPress(8)) {
-      laserSub.setEncoderZero();
-      System.out.println("Laser position Reset Manually");
     }
   }
 

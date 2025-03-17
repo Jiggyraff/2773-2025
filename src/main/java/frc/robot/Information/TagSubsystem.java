@@ -7,21 +7,24 @@ import java.nio.channels.DatagramChannel;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N4;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TagSubsystem extends SubsystemBase {
     //Subsystems
     OdometrySubsystem odomSub;
+
+    //Motor control variables
+    Servo servo = new Servo(999);
+    //Absolute max value of the servo, ssuming min is zero.
+    double maxPosition;
+    double minPosition;
+    double posDifference = maxPosition - minPosition;
+    double setPosition;
+    PIDController pid = new PIDController(0.1, 0, 0);
 
     // PORT
     private final int PORT = 5800;
@@ -40,8 +43,9 @@ public class TagSubsystem extends SubsystemBase {
     private Boolean seesTag = false;
     private double alphaTolerance = 0.1;
     private double XCom;
+    //The offset a tag can be from the center of a camera to still be seen/be accurate
+    private final double effectiveOffset = 70;
 
-    private LaserSubsystem laserSub;
 
     //Tag Data Stuff
     TagData lastTag;
@@ -71,7 +75,7 @@ public class TagSubsystem extends SubsystemBase {
             {21, 209.49, 158.50, 12.13, 0,   0},
             {22, 193.10, 130.17, 12.13, 300, 0}};
 
-    double[][] currentTagPolars = new double[22][2];
+    double[][] currentTagPolars = new double[22][3];
 
         //https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings.pdf
         //+X is distance along length of field from BLUE reef side
@@ -90,14 +94,14 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-    public TagSubsystem(OdometrySubsystem odomSub, LaserSubsystem laserSub) {
+    public TagSubsystem(OdometrySubsystem odomSub) {
         this.odomSub = odomSub;
         try {
             InetSocketAddress address = new InetSocketAddress(PORT);
             this.channel = DatagramChannel.open().bind(address);
             this.channel.configureBlocking(false);
             //this.isEnabled = true;
-            } catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         Shuffleboard.getTab("April Tag Data").addDoubleArray("ID", () -> {return data != null ? new double[] {data.aprilTagID} : new double[]{};});
@@ -107,7 +111,6 @@ public class TagSubsystem extends SubsystemBase {
         Shuffleboard.getTab("April Tag Data").addDoubleArray("Angle", () -> {return data != null ? new double[] {data.alpha} : new double[]{};});
         Shuffleboard.getTab("Odometry").addDoubleArray("Adjusted Distance", () -> {return data != null ? new double[] {laserDistance} : new double[]{};});
         Shuffleboard.getTab("April Tag Data").addBoolean("Sees Tag", () -> {return seesTag;});
-        this.laserSub = laserSub;
     }
 
     @Override
@@ -116,7 +119,20 @@ public class TagSubsystem extends SubsystemBase {
         if (isEnabled) {
             receivePacket();
         }
+
+        //Experimental
         graphTagPolars();
+
+        //For motor
+        double angle = setPosition + (odomSub.getGyroAngle()/Math.PI) * ((posDifference)/2);
+        while (angle > maxPosition) {
+          angle -= posDifference;
+        }
+        while (angle < minPosition) {
+          angle += posDifference;
+        }
+
+        servo.set(setPosition);
     }
         
     TagData data;
@@ -169,17 +185,6 @@ public class TagSubsystem extends SubsystemBase {
             odomSub.setPose(x, y, radians);
         }
     }
-
-    // private void distanceUpdateOdometry() {
-    //     if (data != null) {
-    //     double angleBetweenRobotAndTag = laserSub.getRelativeMotorPosition() - odomSub.getGyroAngle() + Math.PI;
-    //     double dx = Math.cos(angleBetweenRobotAndTag) * data.z;
-    //     double dy = Math.sin(angleBetweenRobotAndTag) * data.z;
-    //     dx += aprilTagPositions[data.aprilTagID][1];
-    //     dy += aprilTagPositions[data.aprilTagID][2];
-    //     odomSub.setPose(dx, dy, odomSub.getGyroAngle());
-    //     }
-    // }
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123;123 123 123; 123 */
@@ -248,7 +253,7 @@ public class TagSubsystem extends SubsystemBase {
     }
 
 
-
+    //Toggles whether or not it updates odom
     public void enable() {
         if (syncTags) {
             syncTags = false;
@@ -259,6 +264,7 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
+    //Toggles cautious mode
     public void cautiousMode() {
         if (cautiousMode) {
             cautiousMode = false;
@@ -269,44 +275,21 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    // double[] laserSum = new double[10];
-    // int laserN = 0;
-    // public void setDistance(double d) {
-    //     if (laserN != 10) {
-    //         laserSum[laserN] = d;
-    //         laserN++;
-    //     } else {
-    //         double laserAverage = 0.0;
-    //         double laserAverage2 = 0.0;
-    //         for (int i = 0; i < laserSum.length;i++) {
-    //             laserAverage += laserSum[i];
-    //         }
-    //         laserAverage /= 10;
-    //         int n = 0;
-    //         for (int i = 0; i < laserSum.length; i++) {
-    //             if (laserSum[i] > laserAverage) {
-    //                 laserAverage2 += laserSum[i];
-    //                 n++;
-    //             }
-    //         }
-    //         laserAverage2 /= n;
-    //         laserDistance = laserAverage2/1000;
-    //     }
-    // }
-
     public Boolean getSeestag() {
-        // System.out.println("Sees Tag: " + seesTag);
         return seesTag;
     }
 
+    //returns x displacement from center of cam POV
     public double getXCom() {
         return XCom;
     }
 
+    //Makes sure it does not falsely see tag
     public void reset() {
         seesTag = false;
     }
 
+    //EXPERIMENTAL VIRTUAL FIELD COMMANDS
     //Assumes robot's position is in meters and is field centric
     private void graphTagPolars() {
         for (int i = 0; i < currentTagPolars.length; i++) {
@@ -315,16 +298,52 @@ public class TagSubsystem extends SubsystemBase {
             currentTagPolars[i][0] = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
             //From robot to tag
             currentTagPolars[i][1] = Math.atan2(dy, dx);
+            //Can see tag?
+            currentTagPolars[i][2] = Math.abs(Math.atan2(dy, dx) * (180/Math.PI)) < effectiveOffset ? 1 : 0; 
         }
     }
 
     public double[] getNearestTag() {
         double[] nearestTag = {999, 0};
         for (int i = 0; i < currentTagPolars.length; i++) {
-            if (currentTagPolars[i][0] < nearestTag[0]) {
+            if (currentTagPolars[i][0] < nearestTag[0] && currentTagPolars[i][2] == 1) {
                 nearestTag = currentTagPolars[i];
             }
         }
         return nearestTag;
+    }
+
+    //COMMANDS FOR MOTOR CONTROL
+    public void setPositionDifference(double d) {
+        setRelativeAngle(d + getRelativeAngle());
+    }
+
+    private void setPosition(double pos) {
+        setPosition = pos;
+    }
+
+    public double getPosition() {
+        return servo.get();
+    }
+
+    //Sets the servo relative from pi to neg pi
+    public void setRelativeAngle(double setAngle2) {
+        double pos = (setAngle2/Math.PI + 0.5) * (posDifference) + minPosition;
+        while (pos > maxPosition) {
+            pos -= 2 * Math.PI;
+        }
+        while (pos < maxPosition) {
+            pos += 2 * Math.PI;
+        }
+        setPosition(pos);
+    }
+
+    //Returns position from pi to neg pi
+    public double getRelativeAngle() {
+      return (maxPosition / (servo.get() - minPosition) - (posDifference)/2) * Math.PI;
+    }
+
+    public double getGyroAngle() {
+        return odomSub.getGyroAngle();
     }
 }

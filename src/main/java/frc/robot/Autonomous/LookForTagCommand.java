@@ -7,20 +7,19 @@ package frc.robot.Autonomous;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Information.LaserSubsystem;
+
 import frc.robot.Information.TagSubsystem;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class LookForTagCommand extends Command {
   TagSubsystem tagSub;
-  LaserSubsystem laserSub;
+  
   PIDController motorPID = new PIDController(0.15, 0, 0);
   /** Creates a new LockOnTagCommand. */
-  public LookForTagCommand(TagSubsystem tagSub, LaserSubsystem laserSub) {
+  public LookForTagCommand(TagSubsystem tagSub) {
     addRequirements(tagSub);
     // Use addRequirements() here to declare subsystem dependencies.
     this.tagSub = tagSub;
-    this.laserSub = laserSub;
   }
   
   // Called when the command is initially scheduled.
@@ -38,11 +37,11 @@ public class LookForTagCommand extends Command {
     if (c == 2) {
       System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
       if (!tagSub.getSeestag()) {
-        laserSub.setAngleDifference(0.05);
+        tagSub.setPositionDifference(0.05);
         // System.out.println(tagSub.getSeestag());
       } else {
         double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.05, 0.05);
-        laserSub.setAngleDifference(speed);
+        tagSub.setPositionDifference(speed);
       }
       c = 0;
     } else {

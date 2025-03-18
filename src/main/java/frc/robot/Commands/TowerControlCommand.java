@@ -4,6 +4,7 @@
 
 package frc.robot.Commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -12,6 +13,7 @@ import frc.robot.OtherSubsystems.TowerSubsystem;
 public class TowerControlCommand extends Command {
   TowerSubsystem towerSub;
   Joystick joy;
+  boolean simple;
 
   /** Creates a new TowerControlCommand. */
   public TowerControlCommand(TowerSubsystem towerSub, Joystick joy) {
@@ -28,16 +30,39 @@ public class TowerControlCommand extends Command {
   
   @Override
   public void execute() {
-    towerSub.setDifferenceHeight(joy.getY() * Constants.MaxTowerSpeed);
+    if (!simple) {
+      towerSub.setDifferenceHeight(MathUtil.applyDeadband(joy.getY(), 0.03) * Constants.MaxTowerSpeed);
+    } else {
+      towerSub.runElevatorMotors(MathUtil.applyDeadband(joy.getY(), 0.03) * Constants.MaxTowerSpeed);
+    }
+
+    if (joy.getRawButtonPressed(5)) {
+      simple=true ? (simple = false) : (simple = true);
+    }
     // System.out.println(joy.getRawButton(2));
-    if (joy.getRawButton(2)) {
-      towerSub.setAlgaeMotors(-0.2);
-    } else if (joy.getRawButton(3)) {
-      towerSub.setAlgaeMotors(0.2);
+    if (joy.getRawButton(6)) {
+      towerSub.setAlgaeMotors(1);
+    } else if (joy.getRawButton(7)) {
+      towerSub.setAlgaeMotors(-1);
     } else {
       towerSub.setAlgaeMotors(0);
     }
-    if (joy.getRawButton(10) && joy.getRawButton(11)) {
+
+    if (joy.getRawButton(11)) {
+      towerSub.setCoralMotors(1);
+    } else if (joy.getRawButton(10)) {
+      towerSub.setCoralMotors(-1);
+    }
+
+    if (joy.getRawButton(2)) {
+      towerSub.setCoralRotateMotors(-1);
+    } else if (joy.getRawButton(3)) {
+      towerSub.setCoralRotateMotors(1);
+    } else {
+      towerSub.setCoralRotateMotors(0);
+    }
+
+    if (joy.getRawButton(8) && joy.getRawButton(9)) {
       towerSub.zeroElevatorEncoders();
     }
     

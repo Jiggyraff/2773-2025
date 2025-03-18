@@ -18,7 +18,7 @@ public class TagSubsystem extends SubsystemBase {
     OdometrySubsystem odomSub;
 
     //Motor control variables
-    Servo servo = new Servo(999);
+    // Servo servo = new Servo(999);
     //Absolute max value of the servo, ssuming min is zero.
     double maxPosition;
     double minPosition;
@@ -132,7 +132,7 @@ public class TagSubsystem extends SubsystemBase {
           angle += posDifference;
         }
 
-        servo.set(setPosition);
+        // servo.set(setPosition);
     }
         
     TagData data;
@@ -188,7 +188,7 @@ public class TagSubsystem extends SubsystemBase {
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123;123 123 123; 123 */
-        // System.out.println(s);
+        System.out.println(s);
         String[] tokens = s.split("; ");  
         String[] ids = tokens[0].split(": ");
         if (!ids[0].equals("TAG_FOUND") || tokens.length < 4) {
@@ -323,7 +323,8 @@ public class TagSubsystem extends SubsystemBase {
     }
 
     public double getPosition() {
-        return servo.get();
+        // return servo.get();
+        return -1;
     }
 
     //Sets the servo relative from pi to neg pi
@@ -340,7 +341,8 @@ public class TagSubsystem extends SubsystemBase {
 
     //Returns position from pi to neg pi
     public double getRelativeAngle() {
-      return (maxPosition / (servo.get() - minPosition) - (posDifference)/2) * Math.PI;
+    //   return (maxPosition / (servo.get() - minPosition) - (posDifference)/2) * Math.PI;
+    return -1;
     }
 
     public double getGyroAngle() {

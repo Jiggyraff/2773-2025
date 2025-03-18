@@ -26,10 +26,6 @@ import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.MoveElevatorCommand;
-import frc.robot.Autonomous.PerfectPoseDifferenceCommand;
-import frc.robot.Autonomous.PolarMoveCommand;
-import frc.robot.Autonomous.RotateToRadiansCommand;
-import frc.robot.Autonomous.RotateToCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
 // import frc.robot.OtherSubsystems.ClimberSubsystem;
@@ -57,17 +53,15 @@ public class RobotContainer {
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
-  LaserSubsystem laserSub = new LaserSubsystem(driveSub, odomSub);
-  TagSubsystem tagSub = new TagSubsystem(odomSub, laserSub);
+  TagSubsystem tagSub = new TagSubsystem(odomSub);
   TowerSubsystem towerSub = new TowerSubsystem();
   // ClimberSubsystem climbSub = new ClimberSubsystem();
   
   // Commands from files
-  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, laserSub, tagSub, odomSub);
+  HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
   TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
   // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
-  SimpleTowerControlCommand simpleTowerCommand = new SimpleTowerControlCommand(towerSub, towerJoy);
-  LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub, laserSub);
+  LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
   MoveElevatorCommand moveToMaxHeight = new MoveElevatorCommand(1, towerSub);
   {
     driveSub.setDefaultCommand(driveCommand);
@@ -77,10 +71,6 @@ public class RobotContainer {
   }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
-  RotateToCommand rotateToCommand = new RotateToCommand(Math.PI, driveSub, odomSub);
-  PolarMoveCommand polarMove = new PolarMoveCommand(-(3 / 4) * Math.PI, 1, driveSub, odomSub);
-  RotateToRadiansCommand rotateToZero = new RotateToRadiansCommand(0, odomSub, driveSub);
-  RotateToRadiansCommand rotateToFlank = new RotateToRadiansCommand(Math.PI, odomSub, driveSub);
 
   // SequentialCommandGroup plusPlus = new DeltaPoseCommand(0, 0.5, 0, driveSub, odomSub).andThen(
   //     new DeltaPoseCommand(0, -0.5, 0, driveSub, odomSub)).andThen(
@@ -114,20 +104,6 @@ public class RobotContainer {
   );
 
   private void configureBindings() {
-    JoystickButton towerModeSwitchButton = new JoystickButton(towerJoy, 2);
-    towerModeSwitchButton.toggleOnTrue(new InstantCommand(() -> {
-      if (towerJoy.getRawButton(1)) {
-        
-      if (towerSub.getDefaultCommand() != simpleTowerCommand) {
-        towerSub.setDefaultCommand(simpleTowerCommand);
-        System.out.println("Simpletower");
-      } else {
-        towerSub.setDefaultCommand(towerCommand);
-        System.out.println("Complextower");
-      }
-      towerSub.getDefaultCommand().schedule();
-    }
-    }));
 
   }
 
@@ -174,7 +150,6 @@ public class RobotContainer {
     new MoveElevatorCommand(0.5, towerSub)
   ));
 
-  // SequentialCommandGroup doASmallTwirl = 
 
   public Command getAutonomousCommand(String autoChosen) {
     switch (autoChosen){

@@ -21,18 +21,18 @@ public class TowerSubsystem extends SubsystemBase {
   RelativeEncoder encoder2 = elevatorMotor2.getEncoder();
   SparkMax algaeMotor = new SparkMax(13, SparkMax.MotorType.kBrushless);
   SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
-  SparkMax coralRotateMotor = new SparkMax(999, SparkMax.MotorType.kBrushless);
-  SparkMax coralMotor = new SparkMax(998, SparkMax.MotorType.kBrushless);
+  SparkMax coralRotateMotor = new SparkMax(30, SparkMax.MotorType.kBrushless);
+  SparkMax coralMotor = new SparkMax(31, SparkMax.MotorType.kBrushless);
 
-  private final double algaeSpeed = 0.0;
-  private final double coralRotateSpeed = 0.0;
-  private final double coralSpeed = 0.0;
+  private final double algaeSpeed = 0.2;
+  private final double coralRotateSpeed = 0.2;
+  private final double coralSpeed = 0.1;
   
   
   PIDController pid = new PIDController(0.1, 0.001, 0.001);
   
   
-  private double height = encoder.getPosition();
+  private double height = 0;
   private double speed;
   private boolean automatic = false;
 
@@ -55,8 +55,8 @@ public class TowerSubsystem extends SubsystemBase {
           Constants.MaxTowerSpeed);
       runElevatorMotors(speed);
       // System.out.println(encoder.getPosition());
-      // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      // height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
+      System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
+      height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
   }
 
   public void setHeight(double d) {
@@ -99,9 +99,19 @@ public class TowerSubsystem extends SubsystemBase {
   }
 
   public void setAlgaeMotors(double d) {
-    d = MathUtil.clamp(d, -1, 1);
+    d = MathUtil.clamp(d, -algaeSpeed, algaeSpeed);
     algaeMotor.set(d);
     algaeMotor2.set(-d);
+  }
+
+  public void setCoralRotateMotors(double d) {
+    d = MathUtil.clamp(d, -coralRotateSpeed, coralRotateSpeed);
+    coralRotateMotor.set(-d);
+  }
+
+  public void setCoralMotors(double d) {
+    d = MathUtil.clamp(d, -coralSpeed, coralSpeed);
+    coralMotor.set(d);
   }
 
 public boolean elevatorAtSetpoint() {

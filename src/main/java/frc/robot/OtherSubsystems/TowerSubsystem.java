@@ -29,7 +29,7 @@ public class TowerSubsystem extends SubsystemBase {
   private final double coralSpeed = 0.1;
   
   
-  PIDController pid = new PIDController(0.1, 0.001, 0.001);
+  PIDController pid = new PIDController(0.2, 0.001, 0.001);
   
   
   private double height = 0;
@@ -56,11 +56,11 @@ public class TowerSubsystem extends SubsystemBase {
       runElevatorMotors(speed);
       // System.out.println(encoder.getPosition());
       System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
+      height + "Rotation: " + coralRotateMotor.getEncoder().getPosition());
   }
 
   public void setHeight(double d) {
-    height = MathUtil.clamp(d, -18.5, 0);
+    height = MathUtil.clamp(d, -19, 0);
   }
 
   public void setDifferenceHeight(double d) {
@@ -79,7 +79,7 @@ public class TowerSubsystem extends SubsystemBase {
   }
 
   public void percentageHeight(double d) {
-    setHeight(-20 + (d * 20));
+    setHeight(-19 + (d * 19));
   }
 
   public void zeroElevatorEncoders() {

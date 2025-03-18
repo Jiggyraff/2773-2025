@@ -25,7 +25,7 @@ import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LookForTagCommand;
-import frc.robot.Autonomous.MoveElevatorCommand;
+import frc.robot.Autonomous.HeightBasedElevatorCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
 // import frc.robot.OtherSubsystems.ClimberSubsystem;
@@ -62,7 +62,7 @@ public class RobotContainer {
   TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
   // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
   LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
-  MoveElevatorCommand moveToMaxHeight = new MoveElevatorCommand(1, towerSub);
+  HeightBasedElevatorCommand moveToMaxHeight = new HeightBasedElevatorCommand(1, towerSub);
   {
     driveSub.setDefaultCommand(driveCommand);
     // climbSub.setDefaultCommand(climberCommand);
@@ -95,10 +95,10 @@ public class RobotContainer {
   // JoystickButton resetMotorsButton = new JoystickButton(driveStick, 4);
   // JoystickButton resetOrientationButton = new JoystickButton(hotas, 7);
 
-  SequentialCommandGroup heightLadder = new MoveElevatorCommand(0.5, towerSub).andThen(
-    new MoveElevatorCommand(0.25, towerSub).andThen(
-      new MoveElevatorCommand(0.75, towerSub).andThen(
-        new MoveElevatorCommand(0, towerSub)
+  SequentialCommandGroup heightLadder = new HeightBasedElevatorCommand(0.5, towerSub).andThen(
+    new HeightBasedElevatorCommand(0.25, towerSub).andThen(
+      new HeightBasedElevatorCommand(0.75, towerSub).andThen(
+        new HeightBasedElevatorCommand(0, towerSub)
       )
     )
   );
@@ -109,45 +109,45 @@ public class RobotContainer {
 
   SequentialCommandGroup doADance = new ParallelCommandGroup(
     new DeltaPoseCommand(0.5, 0.5, -Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(0.25, towerSub)
+    new HeightBasedElevatorCommand(0.25, towerSub)
   ).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(-1, 1, Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(1, 1, -Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(0.75, towerSub)
+    new HeightBasedElevatorCommand(0.75, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(-1, 1, Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(1, towerSub)
+    new HeightBasedElevatorCommand(1, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(0.5, -3.5, 0, driveSub, odomSub),
-    new MoveElevatorCommand(0, towerSub)
+    new HeightBasedElevatorCommand(0, towerSub)
   ));
 
   SequentialCommandGroup doATwirl = new ParallelCommandGroup(
     new DeltaPoseCommand(0, 1, -Math.PI, driveSub, odomSub),
-    new MoveElevatorCommand(0.25, towerSub)
+    new HeightBasedElevatorCommand(0.25, towerSub)
   ).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(-1, -1, Math.PI, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(1, -1, Math.PI, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(1, 1, 0, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(-1, -1, Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(-1, 1, Math.PI, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(1, 1, -Math.PI/2, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   )).andThen(new ParallelCommandGroup(
     new DeltaPoseCommand(0, -1, 0, driveSub, odomSub),
-    new MoveElevatorCommand(0.5, towerSub)
+    new HeightBasedElevatorCommand(0.5, towerSub)
   ));
 
 
@@ -162,4 +162,6 @@ public class RobotContainer {
             default: return null;
     }
   }
+  
+  
 }

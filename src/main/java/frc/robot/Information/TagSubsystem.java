@@ -139,7 +139,7 @@ public class TagSubsystem extends SubsystemBase {
     int deadTimer = 0;
     private void receivePacket() {
         try {
-            // System.out.println("Working");
+            // System.out.println(channel.receive(buffer));
             if (channel.receive(buffer) != null) {
                 buffer.flip();
                 String rawText = new String(buffer.array(), buffer.arrayOffset(),

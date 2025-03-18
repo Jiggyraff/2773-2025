@@ -7,10 +7,7 @@ package frc.robot.Commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Information.*;
 import frc.robot.Constants;
@@ -21,9 +18,12 @@ public class HOTASDriveCommand extends Command {
   private final TagSubsystem tagSub;
   private final OdometrySubsystem odomSub;
   private PIDController pid;
-  private PIDController rotatePID = new PIDController(0.63, 0, 0);
+  private PIDController rotPID;
 
-  private double setAngle;
+  //For setpoint
+  private boolean Rsetpoint = false;
+  private double rx = 0;
+  private double ry = 0.5;
 
   /** Creates a new DriveCommand. */
   public HOTASDriveCommand(DriveSubsystem driveSub, Joystick hotas, TagSubsystem tagSub, OdometrySubsystem odomSub) {
@@ -38,7 +38,7 @@ public class HOTASDriveCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    setAngle = odomSub.getGyroAngle();
+    odomSub.getGyroAngle();
     odomSub.resetGyro();
   }
 
@@ -48,26 +48,29 @@ public class HOTASDriveCommand extends Command {
   @Override
   public void execute() {
     buttonMicroCommands();
-    double x = hotas.getX(), y = hotas.getY();
-    double angle = Math.atan2(y, x);
+    double XAxis = hotas.getX(), YAxis = hotas.getY(), ZAxis = hotas.getZ();
+    double rawAngle = Math.atan2(YAxis, XAxis);
     double gyroAngle = odomSub.getGyroAngle();
     double sensitivity = MathUtil.clamp(1 - hotas.getThrottle(), 0.05, 1);
-    double setSpeed = MathUtil.clamp(Math.sqrt(x * x + y * y)*2, 0,2);
-    double setRotation = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone));
+    double setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
+    double rotSpeed;
+    if (!Rsetpoint) {
+      rotSpeed = (MathUtil.applyDeadband(hotas.getZ(), Constants.HOTASRotationDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+    } else {
+      rotSpeed = rotateAroundPoint(rx, ry);
+    }
           
-    pid.setSetpoint(setSpeed);
-    double speed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
-    pid.setSetpoint(setRotation);
-    double rspeed = pid.calculate(((odomSub.getGyroAngle()-oldG))*2289);
+    pid.setSetpoint(setDistance);
+    double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
 
 
-    if (Math.abs(x) < Constants.HOTASDeadzone && Math.abs(y) < Constants.HOTASDeadzone && Math.abs(setRotation) < Constants.HOTASRotationDeadzone) {
+    if (Math.abs(XAxis) < Constants.HOTASDeadzone && Math.abs(YAxis) < Constants.HOTASDeadzone && Math.abs(ZAxis) < Constants.HOTASRotationDeadzone) {
       driveSubsystem.stop();
     } else {
-      if (Math.abs(setRotation) > 0) {
-        setAngle = odomSub.getGyroAngle();
+      if (Math.abs(ZAxis) > 0) {
+        odomSub.getGyroAngle();
       }
-      driveSubsystem.directionalDrive(speed, angle - gyroAngle, setRotation * sensitivity * Constants.MaxRotationSpeed);
+      driveSubsystem.directionalDrive(driveSpeed, rawAngle - gyroAngle, rotSpeed);
     }
     oldT = driveSubsystem.averageDistanceEncoder();
     oldG = odomSub.getGyroAngle();
@@ -96,6 +99,9 @@ public class HOTASDriveCommand extends Command {
       tagSub.setPositionDifference(-0.05);
       // System.out.println("iiih");
     }
+    if (buttonPressed(1)) {
+      Rsetpoint=true ? Rsetpoint = false : (Rsetpoint = true);
+    }
   }
 
   public Boolean buttonPressed(int i) {
@@ -104,6 +110,14 @@ public class HOTASDriveCommand extends Command {
 
   public Boolean buttonOnPress(int i) {
     return hotas.getRawButtonPressed(i);
+  }
+
+  public double rotateAroundPoint(double rx, double ry) {
+    double dx = rx - odomSub.getX();
+    double dy = ry - odomSub.getY();
+    double angle = Math.atan2(dy, dx);
+    rotPID.setSetpoint(angle);
+    return rotPID.calculate(odomSub.getGyroAngle());
   }
 
   // Called once the command ends or is interrupted.

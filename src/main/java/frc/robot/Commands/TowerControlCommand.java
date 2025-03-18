@@ -55,11 +55,11 @@ public class TowerControlCommand extends Command {
     }
 
     if (joy.getRawButton(2)) {
-      towerSub.setCoralRotateMotors(-1);
+      towerSub.setDifferenceRotation(0.05);;
     } else if (joy.getRawButton(3)) {
-      towerSub.setCoralRotateMotors(1);
+      towerSub.setDifferenceRotation(-0.05);
     } else {
-      towerSub.setCoralRotateMotors(0);
+      towerSub.setDifferenceRotation(0);
     }
 
     if (joy.getRawButton(8) && joy.getRawButton(9)) {

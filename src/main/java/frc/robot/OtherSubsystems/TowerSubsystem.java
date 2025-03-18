@@ -22,6 +22,7 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax algaeMotor = new SparkMax(13, SparkMax.MotorType.kBrushless);
   SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
   SparkMax coralRotateMotor = new SparkMax(30, SparkMax.MotorType.kBrushless);
+  RelativeEncoder coralEncoder = coralRotateMotor.getEncoder();
   SparkMax coralMotor = new SparkMax(31, SparkMax.MotorType.kBrushless);
 
   private final double algaeSpeed = 0.2;
@@ -30,15 +31,20 @@ public class TowerSubsystem extends SubsystemBase {
   
   
   PIDController pid = new PIDController(0.1, 0.001, 0.001);
+  PIDController coralPid = new PIDController(1, 0.001, 0.001);
   
   
   private double height = 0;
   private double speed;
   private boolean automatic = false;
+  private double rotation = -30.95;
+  private double rotationSpeed;
 
   public TowerSubsystem() {
     pid.setTolerance(1);
     pid.reset();
+    coralPid.setTolerance(1);
+    coralPid.reset();
     Shuffleboard.getTab("Tower").addDouble("Encoder", () -> {return encoder.getPosition();});
     Shuffleboard.getTab("Tower").addDouble("Height", () -> {return height;});
     Shuffleboard.getTab("Tower").addDouble("Speed", () -> {return speed;});
@@ -49,14 +55,24 @@ public class TowerSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     pid.setIntegratorRange(-0.001, 0.001);
+    coralPid.setIntegratorRange(-0.001, 0.001);
 
       pid.setSetpoint(height);
       speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
           Constants.MaxTowerSpeed);
       runElevatorMotors(speed);
+
+      coralPid.setSetpoint(rotation);
+      rotationSpeed = MathUtil.clamp(coralPid.calculate(coralEncoder.getPosition()),
+       -coralRotateSpeed,
+       coralRotateSpeed);
+      setCoralMotors(rotationSpeed);
       // System.out.println(encoder.getPosition());
       System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
       height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
+
+      System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
+      "; Rotation: " + rotation + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
   }
 
   public void setHeight(double d) {
@@ -107,6 +123,14 @@ public class TowerSubsystem extends SubsystemBase {
   public void setCoralRotateMotors(double d) {
     d = MathUtil.clamp(d, -coralRotateSpeed, coralRotateSpeed);
     coralRotateMotor.set(-d);
+  }
+
+  public void setRotation(double d) {
+    rotation = MathUtil.clamp(d, 45.26, -30.95);
+  }
+
+  public void setDifferenceRotation(double d) {
+    setRotation(rotation + d);
   }
 
   public void setCoralMotors(double d) {

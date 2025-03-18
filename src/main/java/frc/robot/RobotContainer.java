@@ -28,7 +28,7 @@ import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.HeightBasedElevatorCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
-import frc.robot.OtherSubsystems.ClimberSubsystem;
+// import frc.robot.OtherSubsystems.ClimberSubsystem;
 // import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
@@ -50,23 +50,24 @@ public class RobotContainer {
   // Controllers
   Joystick hotaz = new Joystick(0);
   Joystick towerJoy = new Joystick(1);
+  XboxController xbox = new XboxController(2);
 
   // Subsystems
   DriveSubsystem driveSub = new DriveSubsystem();
   OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
   TagSubsystem tagSub = new TagSubsystem(odomSub);
   TowerSubsystem towerSub = new TowerSubsystem();
-  ClimberSubsystem climbSub = new ClimberSubsystem();
+  // ClimberSubsystem climbSub = new ClimberSubsystem();
   
   // Commands from files
   HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
-  TowerControlCommand towerCommand = new TowerControlCommand(towerSub, towerJoy);
-  ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
+  TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
+  // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
   LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
   HeightBasedElevatorCommand moveToMaxHeight = new HeightBasedElevatorCommand(1, towerSub);
   {
     driveSub.setDefaultCommand(driveCommand);
-    climbSub.setDefaultCommand(climberCommand);
+    // climbSub.setDefaultCommand(climberCommand);
     towerSub.setDefaultCommand(towerCommand);
     tagSub.setDefaultCommand(lookForTagCommand);
   }

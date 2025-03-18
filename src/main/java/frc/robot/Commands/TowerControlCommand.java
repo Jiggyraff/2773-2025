@@ -6,6 +6,7 @@ package frc.robot.Commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.OtherSubsystems.TowerSubsystem;
@@ -13,18 +14,21 @@ import frc.robot.OtherSubsystems.TowerSubsystem;
 public class TowerControlCommand extends Command {
   TowerSubsystem towerSub;
   Joystick joy;
+  
+  private final XboxController xbox;
   boolean simple;
 
   /** Creates a new TowerControlCommand. */
-  public TowerControlCommand(TowerSubsystem towerSub, Joystick joy) {
+  public TowerControlCommand(TowerSubsystem towerSub, XboxController xbox, Joystick joy) {
     addRequirements(towerSub);
     this.towerSub = towerSub;
     this.joy = joy;
+    
+    this.xbox = xbox;
   }
 
   @Override
   public void initialize() {
-    towerSub.setAutomatic(true);
     towerSub.runElevatorMotors(0);
   }
   
@@ -38,32 +42,47 @@ public class TowerControlCommand extends Command {
 
     if (joy.getRawButtonPressed(5)) {
       simple=true ? (simple = false) : (simple = true);
+      System.out.println("Simple: " + simple);
     }
     // System.out.println(joy.getRawButton(2));
     if (joy.getRawButton(6)) {
-      towerSub.setAlgaeMotors(1);
+      towerSub.runAlgaeMotors(1);
     } else if (joy.getRawButton(7)) {
-      towerSub.setAlgaeMotors(-1);
+      towerSub.runAlgaeMotors(-1);
     } else {
-      towerSub.setAlgaeMotors(0);
+      towerSub.runAlgaeMotors(0);
     }
 
     if (joy.getRawButton(11)) {
-      towerSub.setCoralMotors(1);
+      towerSub.runCoralMotors(1);
     } else if (joy.getRawButton(10)) {
-      towerSub.setCoralMotors(-1);
+      towerSub.runCoralMotors(-1);
     }
 
-    if (joy.getRawButton(2)) {
-      towerSub.setDifferenceRotation(0.05);;
-    } else if (joy.getRawButton(3)) {
+    if (joy.getRawButtonPressed(2)) {
       towerSub.setDifferenceRotation(-0.05);
-    } else {
-      towerSub.setDifferenceRotation(0);
+    } else if (joy.getRawButtonPressed(3)) {
+      towerSub.setDifferenceRotation(0.05);
     }
 
     if (joy.getRawButton(8) && joy.getRawButton(9)) {
       towerSub.zeroElevatorEncoders();
+    }
+    
+    if (xbox.getPOV() == 0) {
+      towerSub.setHeight(-15.11);
+    } else if (xbox.getPOV() == 180) {
+      towerSub.setHeight(-8.19);
+    }
+
+    if (xbox.getYButtonPressed()) {
+      towerSub.setHeight(-18.33);
+      towerSub.setRotation(16.59);
+    }
+
+    if (xbox.getRightStickButtonPressed()) {
+      towerSub.setHeight(-10.26);
+      towerSub.setRotation(29.85);
     }
     
 
@@ -71,7 +90,7 @@ public class TowerControlCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    towerSub.stopElevatorMotors();
+    towerSub.runElevatorMotors(0);;
   }
 
   @Override

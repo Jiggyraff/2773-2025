@@ -49,7 +49,7 @@ public class TagSubsystem extends SubsystemBase {
 
     //Tag Data Stuff
     TagData lastTag;
-    double[][] aprilTagPositions = 
+    public final double[][] aprilTagPositions = 
         //   ID    X       Y       Z    Zrot Yrot   >>>>   explained below          
            {//{1, 1,  2,  43, 0, 0},
             {1, 657.37,  25.80,  58.50, 126, 0},

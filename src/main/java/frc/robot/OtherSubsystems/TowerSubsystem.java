@@ -99,7 +99,6 @@ public class TowerSubsystem extends SubsystemBase {
     setRotation(rotation + d);
   }
   
-  
   public void runElevatorMotors(double speed) {
     // System.out.println("Enocders: " + encoder.getPosition() + ", Speed: " + speed);
     elevatorMotor.set(speed);

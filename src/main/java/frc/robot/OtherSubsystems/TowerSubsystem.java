@@ -23,27 +23,29 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
   SparkMax coralRotateMotor = new SparkMax(30, SparkMax.MotorType.kBrushless);
   RelativeEncoder coralEncoder = coralRotateMotor.getEncoder();
-  SparkMax coralMotor = new SparkMax(31, SparkMax.MotorType.kBrushless);
+  SparkMax coralMotor = new SparkMax(32, SparkMax.MotorType.kBrushless);
 
   private final double algaeSpeed = 0.2;
   private final double coralRotateSpeed = 0.2;
   private final double coralSpeed = 0.1;
   
   
-  PIDController pid = new PIDController(0.2, 0.001, 0.001);
-  PIDController coralPid = new PIDController(1, 0.001, 0.001);
+  PIDController pid = new PIDController(0.1, 0.001, 0.001);
+  PIDController coralPid = new PIDController(0.1, 0, 0);
+  final double pidTolerance = 0.1;
+  final double coralPidTolerance = 1;
   
   
   private double height = 0;
   private double speed;
-  private boolean automatic = false;
-  private double rotation = -30.95;
-  private double rotationSpeed;
+
+  private double r = 0;
 
   public TowerSubsystem() {
-    pid.setTolerance(1);
+    coralEncoder.setPosition(0);
+    pid.setTolerance(pidTolerance);
     pid.reset();
-    coralPid.setTolerance(1);
+    coralPid.setTolerance(coralPidTolerance);
     coralPid.reset();
     Shuffleboard.getTab("Tower").addDouble("Encoder", () -> {return encoder.getPosition();});
     Shuffleboard.getTab("Tower").addDouble("Height", () -> {return height;});
@@ -52,94 +54,118 @@ public class TowerSubsystem extends SubsystemBase {
   }
 
   // IMPORTANT: the elevator's range is from 0 to 20, with 0 being the top
+  double oldHeight = 0;
   @Override
   public void periodic() {
     pid.setIntegratorRange(-0.001, 0.001);
-    coralPid.setIntegratorRange(-0.001, 0.001);
+    coralPid.setIntegratorRange(-0.01, 0.01);
 
       pid.setSetpoint(height);
-      speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -Constants.MaxTowerSpeed,
-          Constants.MaxTowerSpeed);
+      
+      
+      // double errorMax = 0.1;
+      // if (Math.abs(encoder.getPosition() - height) > errorMax) {
+        speed = MathUtil.clamp(-0.0373 + 2 * Math.pow(height - encoder.getPosition(), 2) * Math.signum(height - encoder.getPosition()), -0.25, 0.25);
+      
+        // } else {
+      //   speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -0.25, 0.25);
+      // }
+
+      // double flatline = 0;
+      // speed = flatline;
+      // if (encoder.getPosition() - height > 0 && encoder.getPosition() - height < 0.5) { //Up
+      //   speed += 0;
+      // } else if (encoder.getPosition() - height > 0 && encoder.getPosition() - height < 5) {
+      //   speed += -0.1;
+      // } else if (encoder.getPosition() - height > 0 && encoder.getPosition() - height > 5) {
+      //   speed += -0.2;
+      // }
+      // if (encoder.getPosition() - height < 0 && encoder.getPosition() - height < 0.5) { //Up
+      //   speed += 0;
+      // } else if (encoder.getPosition() - height < 0 && encoder.getPosition() - height < 5) {
+      //   speed += 0.1;
+      // } else if (encoder.getPosition() - height < 0 && encoder.getPosition() - height > 5) {
+      //   speed += 0.2;
+      // }
+      // if (encoder.getPosition() - height > 0 && encoder.getPosition() - height > 0.4) {
+      //   speed *= (encoder.getPosition() - height + 0.8);
+      // }
+      // if (encoder.getPosition() - height < 0 && encoder.getPosition() - height < -0.4) {
+      //   speed *= (encoder.getPosition() - height  - 0.8);
+      // }
       runElevatorMotors(speed);
 
-      coralPid.setSetpoint(rotation);
-      rotationSpeed = MathUtil.clamp(coralPid.calculate(coralEncoder.getPosition()),
+      if (pid.atSetpoint()) {
+        pid.reset();
+      }
+
+      coralPid.setSetpoint(r);
+      double rotationSpeed = -MathUtil.clamp(coralPid.calculate(coralEncoder.getPosition()),
        -coralRotateSpeed,
        coralRotateSpeed);
-      setCoralMotors(rotationSpeed);
+      runCoralRotateMotors(rotationSpeed);
       // System.out.println(encoder.getPosition());
       System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      height + "Speed: " + speed + "Error: " + pid.getAccumulatedError());
+      height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
+      System.out.println("Error: " + pid.getError());
+      System.out.println("Speed: " + speed);
 
       System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
-      "; Rotation: " + rotation + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
+      "; Rotation: " + r + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
+      oldHeight = height;
   }
 
   public void setHeight(double d) {
-    height = MathUtil.clamp(d, -19, 0);
+    height = MathUtil.clamp(d, -12.0, 0);
   }
 
   public void setDifferenceHeight(double d) {
-    setHeight(height + d);
+    setHeight(height + MathUtil.clamp(d, -0.1, 0.1));
   }
-
+  
+  public void setRotation(double d) {
+    r = MathUtil.clamp(d, 0, 100);
+  }
+  
+  public void setDifferenceRotation(double d) {
+    System.out.println("########### " + d);
+    setRotation(r + d);
+  }
+  
   public void runElevatorMotors(double speed) {
-      // System.out.println("Enocders: " + encoder.getPosition() + ", Speed: " + speed);
-      elevatorMotor.set(speed);
-      elevatorMotor2.set(-speed);
+    // System.out.println("Enocders: " + encoder.getPosition() + ", Speed: " + speed);
+    elevatorMotor.set(speed);
+    elevatorMotor2.set(-speed);
   }
 
-  public void stopElevatorMotors() {
-    elevatorMotor.set(0);
-    elevatorMotor2.set(0);
+  public void runAlgaeMotors(double speed) {
+    speed = MathUtil.clamp(speed, -algaeSpeed, algaeSpeed);
+    algaeMotor.set(speed);
+    algaeMotor2.set(-speed);
   }
 
-  public void percentageHeight(double d) {
-    setHeight(-19 + (d * 19));
+  public void runCoralRotateMotors(double speed) {
+    speed = MathUtil.clamp(speed, -coralRotateSpeed, coralRotateSpeed);
+    coralRotateMotor.set(-speed);
   }
 
+
+  public void runCoralMotors(double speed) {
+    speed = MathUtil.clamp(speed, -coralSpeed, coralSpeed);
+    coralMotor.set(speed);
+  }
+
+  
   public void zeroElevatorEncoders() {
     encoder.setPosition(0);
     encoder2.setPosition(0);
   }
-
-  public void setAutomatic(boolean enabled) {
-    if (this.automatic != enabled) {
-      // Mode was changed
-      if (enabled) {
-        // Sync hieght with current encoder.
-        // height = encoder.getPosition();
-      }
-    }
-    this.automatic = enabled;
-  }
-
-  public void setAlgaeMotors(double d) {
-    d = MathUtil.clamp(d, -algaeSpeed, algaeSpeed);
-    algaeMotor.set(d);
-    algaeMotor2.set(-d);
-  }
-
-  public void setCoralRotateMotors(double d) {
-    d = MathUtil.clamp(d, -coralRotateSpeed, coralRotateSpeed);
-    coralRotateMotor.set(-d);
-  }
-
-  public void setRotation(double d) {
-    rotation = MathUtil.clamp(d, 45.26, -30.95);
-  }
-
-  public void setDifferenceRotation(double d) {
-    setRotation(rotation + d);
-  }
-
-  public void setCoralMotors(double d) {
-    d = MathUtil.clamp(d, -coralSpeed, coralSpeed);
-    coralMotor.set(d);
-  }
-
-public boolean elevatorAtSetpoint() {
+  
+  public boolean elevatorAtSetpoint() {
     return pid.atSetpoint();
-}
-
+  }
+  
+  public void percentageHeight(double d) {
+    setHeight(-19 + (d * 19));
+  }
 }

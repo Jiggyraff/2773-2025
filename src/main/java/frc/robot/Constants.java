@@ -42,7 +42,7 @@ public final class Constants {
         public static final int backRightModuleEncoderCANID = 55;
     
         public static final double MaxDriveSpeed = 1.0;
-        public static final double MaxRotationSpeed = 0.20;
+        public static final double MaxRotationSpeed = 0.50;
         public static final double MaxTowerSpeed = 0.25;
         public static final double MaxAutoDriveSpeed = 0.3;
   //Soft limitations

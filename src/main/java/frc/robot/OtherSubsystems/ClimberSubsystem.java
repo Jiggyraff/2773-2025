@@ -16,7 +16,7 @@ import frc.robot.Constants;
 public class ClimberSubsystem extends SubsystemBase {
 
     Servo servo = new Servo(0);
-    SparkMax motor = new SparkMax(13, Constants.motorType);
+    SparkMax motor = new SparkMax(29, Constants.motorType);
     RelativeEncoder encoder = motor.getEncoder();
     double speed;
 
@@ -31,11 +31,12 @@ public class ClimberSubsystem extends SubsystemBase {
         Shuffleboard.getTab("Climber").addDouble("Actual Speed", () -> {
             return encoder.getVelocity();
         });
+        setServo(0);
     }
 
     @Override
     public void periodic() {
-
+        // System.out.println(servo.get());
     }
 
     public void setSpeed(double s) {
@@ -44,6 +45,11 @@ public class ClimberSubsystem extends SubsystemBase {
     }
 
     public void setServo(double value) {
-        servo.set(value);
+        servo.set((value+1)/2);
+        // System.out.println("Pos: " + servo.get() + " Set: " + value);
+    }
+
+    public void setDifferenceServo(double d) {
+        setServo(d + servo.getPosition());
     }
 }

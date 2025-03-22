@@ -166,6 +166,8 @@ public class TagSubsystem extends SubsystemBase {
                 // System.out.println("No tag in sight");
                 seesTag = false;
             }
+
+            
         } catch (Throwable e) {
             e.printStackTrace();
         }

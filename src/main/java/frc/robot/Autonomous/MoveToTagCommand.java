@@ -39,17 +39,20 @@ public class MoveToTagCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    if (tagSub.getLastTagData() != null) {
     goalRotation = tagSub.aprilTagPositions[tagSub.getLastTagData().aprilTagID][4];
     
     speedPID.setSetpoint(0);
     speedPID.setTolerance(speedTolerance);
     rotationPID.setSetpoint(goalRotation);
     rotationPID.setTolerance(rotateTolerance);
+    }
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    if (tagSub.getLastTagData() != null) {
     double x = tagSub.getLastTagData().x;
     double z = tagSub.getLastTagData().z;
 
@@ -69,6 +72,7 @@ public class MoveToTagCommand extends Command {
 
     driveSub.directionalDrive(speed, radians, rspeed);
   }
+  }
 
   // Called once the command ends or is interrupted.
   @Override
@@ -77,6 +81,6 @@ public class MoveToTagCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return (Math.abs(tagSub.getLastTagData().x) < 0.1 && tagSub.getLastTagData().z < distanceBack) ? true : false;
+    return (null != tagSub.getLastTagData() || (Math.abs(tagSub.getLastTagData().x) < 0.1 && tagSub.getLastTagData().z < distanceBack)) ? true : false;
   }
 }

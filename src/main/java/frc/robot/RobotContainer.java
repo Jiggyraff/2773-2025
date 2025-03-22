@@ -11,16 +11,18 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.MoveToTagCommand;
+import frc.robot.Autonomous.PullClimber;
 import frc.robot.Autonomous.HeightBasedElevatorCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
-// import frc.robot.OtherSubsystems.ClimberSubsystem;
+import frc.robot.OtherSubsystems.ClimberSubsystem;
 import frc.robot.OtherSubsystems.TowerSubsystem;
 
 public class RobotContainer {
@@ -39,19 +41,19 @@ public class RobotContainer {
             OdometrySubsystem odomSub = new OdometrySubsystem(driveSub);
             TagSubsystem tagSub = new TagSubsystem(odomSub);
             TowerSubsystem towerSub = new TowerSubsystem();
-            // ClimberSubsystem climbSub = new ClimberSubsystem();
+            ClimberSubsystem climbSub = new ClimberSubsystem();
             
             // Commands from files
             HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
             TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
-            // ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
+            ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
             LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
             HeightBasedElevatorCommand moveToMaxHeight = new HeightBasedElevatorCommand(1, towerSub);
             
             //Command scheduler
             {
               driveSub.setDefaultCommand(driveCommand);
-              // climbSub.setDefaultCommand(climberCommand);
+              climbSub.setDefaultCommand(climberCommand);
               towerSub.setDefaultCommand(towerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
               Trigger t = new Trigger(() -> {return xbox.getRightStickButtonPressed();});
@@ -62,16 +64,21 @@ public class RobotContainer {
 
   //Autonomous chooser
   public Command getAutonomousCommand(String autoChosen) {
-    switch (autoChosen){
-      case "Auto 1": return new PathPlannerAuto("Do A Flip");
-      case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
-      case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
-      case "Auto 4": return doATwirl;
-      case "Auto 5": return doADance;
-      case "Auto 6": return heightLadder;
-      default: return null;
-    }
+    // switch (autoChosen){
+    //   case "Auto 1": return new PathPlannerAuto("Do A Flip");
+    //   case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
+    //   case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
+    //   case "Auto 4": return doATwirl;
+    //   case "Auto 5": return doADance;
+    //   case "Auto 6": return heightLadder;
+    //   default: return null;
+    // }
+    return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
+      new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
+
+    // return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
   }
+  
   
 
 
@@ -81,12 +88,13 @@ public class RobotContainer {
 
 
 
-
-  //From here on out is autonomous hell
-
+  //From here on out is autonomous hell :)
 
 
 
+  public ClimberSubsystem returnClimber() {
+    return climbSub;
+  }
 
 
 
@@ -148,3 +156,4 @@ public class RobotContainer {
     new HeightBasedElevatorCommand(0.5, towerSub)
   ));
 }
+

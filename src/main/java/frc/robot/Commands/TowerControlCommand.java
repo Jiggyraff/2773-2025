@@ -57,10 +57,14 @@ public class TowerControlCommand extends Command {
     }
 
     //Moving coral aimer HOTAS
-    if (joy.getRawButtonPressed(2)) {
-      towerSub.setDifferenceRotation(-0.05);
-    } else if (joy.getRawButtonPressed(3)) {
-      towerSub.setDifferenceRotation(0.05);
+    if (joy.getRawButton(2)) {
+      towerSub.setDifferenceRotation(-0.3);
+      // towerSub.runCoralRotateMotors(-0.5);
+    } else if (joy.getRawButton(3)) {
+      towerSub.setDifferenceRotation(0.3);
+      // towerSub.runCoralRotateMotors(0.5);
+    } else {
+      // towerSub.runCoralRotateMotors(0);
     }
 
     //Spitting/Sucking algae HOTAS
@@ -79,10 +83,13 @@ public class TowerControlCommand extends Command {
       towerSub.runCoralMotors(-1);
     }
 
-
     //Reset elevator encoders
     if (joy.getRawButton(8) && joy.getRawButton(9)) {
       towerSub.zeroElevatorEncoders();
+    }
+
+    if (joy.getRawButton(1)) {
+      towerSub.setRotation(27.4);
     }
 
     //#######      #######
@@ -97,52 +104,56 @@ public class TowerControlCommand extends Command {
     }
 
     //Moving coral aimer XBOX
-    towerSub.setDifferenceRotation(xbox.getRightY() * 0.05);
+    // towerSub.setDifferenceRotation(xbox.getRightY() * 0.05);
 
     //Spitting sucking coral XBOX
-    if (xbox.getLeftTriggerAxis() > 0) {
-      towerSub.runAlgaeMotors(1);
-    } else if (xbox.getLeftBumperButton()) {
-      towerSub.runAlgaeMotors(-1);
-    } else {
-      towerSub.runAlgaeMotors(0);
-    }
+    // if (xbox.getLeftTriggerAxis() > 0) {
+    //   towerSub.runAlgaeMotors(1);
+    // } else if (xbox.getLeftBumperButton()) {
+    //   towerSub.runAlgaeMotors(-1);
+    // } else {
+    //   towerSub.runAlgaeMotors(0);
+    // }
 
     //Spitting/Sucking coral XBOX
-    if (xbox.getRightTriggerAxis() > 0) {
-      towerSub.runCoralMotors(1);
-    } else if (xbox.getRightBumperButton()) {
-      towerSub.runCoralMotors(-1);
-    }
+    // if (xbox.getRightTriggerAxis() > 0) {
+    //   towerSub.runCoralMotors(1);
+    // } else if (xbox.getRightBumperButton()) {
+    //   towerSub.runCoralMotors(-1);
+    // }
     
     //Placing stuff 0 = L4, 270 = L3, 90 = L2, 180 = L1
-    if (xbox.getPOV() == 0) {
-      towerSub.setHeight(-10.26);
-      towerSub.setRotation(29.85);
-    } else if (xbox.getPOV() == 270) {
-    
-    } else if (xbox.getPOV() == 90) {
-  
-    } else if (xbox.getPOV() == 180) {
-    
-    }
-    
-    //Placing algae Y = top, A = bottom
     if (xbox.getYButtonPressed()) {
-      towerSub.setHeight(-15.11);
+      towerSub.setHeight(-20);
+      towerSub.setRotation(60.45);
+    } else if (xbox.getBButtonPressed()) {
+      towerSub.setRotation(68.2);
+      towerSub.setHeight(-7.466);
     } else if (xbox.getAButtonPressed()) {
-      towerSub.setHeight(-8.19);
+      towerSub.setHeight(-2.5238);
+      towerSub.setRotation(68.2);
+    } else if (xbox.getXButtonPressed()) {
+      towerSub.setHeight(-0.0714);
+      towerSub.setRotation(27.4);
     }
+    
+    //Removing algae Y = top, A = bottom
+    // if (xbox.getYButtonPressed()) {
+    //   towerSub.setHeight(-15.11);
+    // } else if (xbox.getAButtonPressed()) {
+    //   towerSub.setHeight(-8.19);
+    // }
 
-    //Recieving coral, B button
-    if (xbox.getBButtonPressed()) {
-      towerSub.setHeight(-0.857);
-    }
+    // //Recieving coral, B button
+    // if (xbox.getBButtonPressed()) {
+    //   towerSub.setHeight(-0.0714);
+    //   towerSub.setRotation(27.4);
+    // }
 
-    //Placing algae, X button
-    if (xbox.getXButtonPressed()) {
-      towerSub.setHeight(0);
-    }
+    // //Placing algae, X button
+    // if (xbox.getXButtonPressed()) {
+    //   towerSub.setHeight(0);
+    // }
 
     //Code for homing command is in robot container
     

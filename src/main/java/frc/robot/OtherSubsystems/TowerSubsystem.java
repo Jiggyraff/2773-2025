@@ -110,8 +110,8 @@ public class TowerSubsystem extends SubsystemBase {
       System.out.println("Error: " + pid.getError());
       System.out.println("Speed: " + speed);
 
-      // System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
-      // "; Rotation: " + rotation + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
+      System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
+      "; Rotation: " + r + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
       oldHeight = height;
   }
 

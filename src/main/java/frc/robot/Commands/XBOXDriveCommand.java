@@ -50,7 +50,7 @@ public class XBOXDriveCommand extends Command {
   @Override
   public void execute() {
     buttonMicroCommands();
-    double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), ZAxis = xbox.getRightX();
+    double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRawAxis(2);
     double rawAngle = Math.atan2(YAxis, XAxis);
     double gyroAngle = odomSub.getGyroAngle();
     if (xbox.getPOV() == 0) {
@@ -61,19 +61,20 @@ public class XBOXDriveCommand extends Command {
     double setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
     double rotSpeed;
     if (!Rsetpoint) {
-      rotSpeed = (MathUtil.applyDeadband(ZAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+      rotSpeed = (MathUtil.applyDeadband(RAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
     } else {
       rotSpeed = rotateAroundPoint(rx, ry);
     }
+    // System.out.println("Axis: " + RAxis + " Speed: " + rotSpeed);
           
     pid.setSetpoint(setDistance);
     double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
 
 
-    if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(ZAxis) < Constants.ControllerDeadzone) {
+    if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone) {
       driveSubsystem.stop();
     } else {
-      if (Math.abs(ZAxis) > 0) {
+      if (Math.abs(RAxis) > 0) {
         odomSub.getGyroAngle();
       }
       driveSubsystem.directionalDrive(driveSpeed, rawAngle - gyroAngle, rotSpeed);
@@ -83,7 +84,7 @@ public class XBOXDriveCommand extends Command {
   }
 
   public void buttonMicroCommands() {
-    if (buttonPressed(7) && buttonOnPress(8)) {
+    if (buttonPressed(9) && buttonOnPress(10)) {
       odomSub.resetGyro();
       System.out.println("Gyro Reset Manually");
     }

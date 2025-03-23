@@ -78,30 +78,9 @@ public class HOTASDriveCommand extends Command {
   }
 
   public void buttonMicroCommands() {
-    if (buttonPressed(7) && buttonOnPress(12)) {
+    if (buttonPressed(7) && buttonOnPress(8)) {
       odomSub.resetGyro();
       System.out.println("Gyro Reset Manually");
-    }
-    if (buttonPressed(7) && buttonOnPress(11)) {
-      odomSub.setPose(0,0,odomSub.getGyroAngle());
-      System.out.println("Position Reset Manually");
-    }
-    if (buttonPressed(7) && buttonOnPress(9)) {
-      tagSub.enable();
-    }
-    if (buttonPressed(7) && buttonOnPress(10)) {
-      tagSub.cautiousMode();
-    }
-    if (buttonPressed(3)) {
-      tagSub.setPositionDifference(0.05);
-      // System.out.println("lk");
-    }
-    if (buttonPressed(4)) {
-      tagSub.setPositionDifference(-0.05);
-      // System.out.println("iiih");
-    }
-    if (buttonPressed(1)) {
-      Rsetpoint=true ? Rsetpoint = false : (Rsetpoint = true);
     }
   }
 

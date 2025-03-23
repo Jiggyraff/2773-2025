@@ -44,7 +44,8 @@ public class RobotContainer {
             ClimberSubsystem climbSub = new ClimberSubsystem();
             
             // Commands from files
-            HOTASDriveCommand driveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
+            HOTASDriveCommand HOTASDriveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
+            XBOXDriveCommand xboxDriveCommand = new XBOXDriveCommand(driveSub, xbox, tagSub, odomSub);
             TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
             ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
             LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
@@ -52,12 +53,12 @@ public class RobotContainer {
             
             //Command scheduler
             {
-              driveSub.setDefaultCommand(driveCommand);
+              driveSub.setDefaultCommand(xboxDriveCommand);
               climbSub.setDefaultCommand(climberCommand);
               towerSub.setDefaultCommand(towerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
-              Trigger t = new Trigger(() -> {return xbox.getRightStickButtonPressed();});
-              t.onTrue(new MoveToTagCommand(0.1, driveSub, odomSub, tagSub));
+              // Trigger t = new Trigger(() -> {return xbox.getRightStickButtonPressed();});
+              // t.onTrue(new MoveToTagCommand(0.1, driveSub, odomSub, tagSub));
             }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);

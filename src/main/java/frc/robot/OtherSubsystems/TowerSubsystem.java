@@ -19,8 +19,8 @@ public class TowerSubsystem extends SubsystemBase {
   SparkMax elevatorMotor2 = new SparkMax(24, SparkMax.MotorType.kBrushless);
   RelativeEncoder encoder = elevatorMotor.getEncoder();
   RelativeEncoder encoder2 = elevatorMotor2.getEncoder();
-  SparkMax algaeMotor = new SparkMax(13, SparkMax.MotorType.kBrushless);
-  SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
+  // SparkMax algaeMotor = new SparkMax(13, SparkMax.MotorType.kBrushless);
+  // SparkMax algaeMotor2 = new SparkMax(15, SparkMax.MotorType.kBrushless);
   SparkMax coralRotateMotor = new SparkMax(30, SparkMax.MotorType.kBrushless);
   RelativeEncoder coralEncoder = coralRotateMotor.getEncoder();
   SparkMax coralMotor = new SparkMax(32, SparkMax.MotorType.kBrushless);
@@ -107,11 +107,11 @@ public class TowerSubsystem extends SubsystemBase {
       // System.out.println(encoder.getPosition());
       System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
       height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
-      System.out.println("Error: " + pid.getError());
-      System.out.println("Speed: " + speed);
+      // System.out.println("Error: " + pid.getError());
+      // System.out.println("Speed: " + speed);
 
-      System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
-      "; Rotation: " + r + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
+      // System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
+      // "; Rotation: " + r + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
       oldHeight = height;
   }
 
@@ -140,8 +140,8 @@ public class TowerSubsystem extends SubsystemBase {
 
   public void runAlgaeMotors(double speed) {
     speed = MathUtil.clamp(speed, -algaeSpeed, algaeSpeed);
-    algaeMotor.set(speed);
-    algaeMotor2.set(-speed);
+    // algaeMotor.set(speed);
+    // algaeMotor2.set(-speed);
   }
 
   public void runCoralRotateMotors(double speed) {

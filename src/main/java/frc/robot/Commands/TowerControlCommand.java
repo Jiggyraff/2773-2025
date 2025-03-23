@@ -19,7 +19,7 @@ public class TowerControlCommand extends Command {
   TowerSubsystem towerSub;
   Joystick joy;
   
-  private final XboxController xbox;
+  private XboxController xbox;
   boolean simple;
 
   /** Creates a new TowerControlCommand. */
@@ -97,11 +97,11 @@ public class TowerControlCommand extends Command {
     //#######      #######
 
     //Moving elevator XBOX
-    if (!simple) {
-      towerSub.setDifferenceHeight(MathUtil.applyDeadband(xbox.getLeftY(), 0.03) * Constants.MaxTowerSpeed);
-    } else {
-      towerSub.runElevatorMotors(MathUtil.applyDeadband(xbox.getLeftY(), 0.03) * Constants.MaxTowerSpeed);
-    }
+    // if (!simple) {
+    //   towerSub.setDifferenceHeight(MathUtil.applyDeadband(xbox.getLeftY(), 0.03) * Constants.MaxTowerSpeed);
+    // } else {
+    //   towerSub.runElevatorMotors(MathUtil.applyDeadband(xbox.getLeftY(), 0.03) * Constants.MaxTowerSpeed);
+    // }
 
     //Moving coral aimer XBOX
     // towerSub.setDifferenceRotation(xbox.getRightY() * 0.05);

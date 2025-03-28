@@ -50,7 +50,7 @@ public class XBOXDriveCommand extends Command {
   @Override
   public void execute() {
     buttonMicroCommands();
-    double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRawAxis(2);
+    double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRightX();
     double rawAngle = Math.atan2(YAxis, XAxis);
     double gyroAngle = odomSub.getGyroAngle();
     if (xbox.getPOV() == 0) {
@@ -84,13 +84,14 @@ public class XBOXDriveCommand extends Command {
   }
 
   public void buttonMicroCommands() {
-    if (buttonPressed(9) && buttonOnPress(10)) {
+    if (buttonPressed(7) && buttonOnPress(8)) {
       odomSub.resetGyro();
       System.out.println("Gyro Reset Manually");
     }
-    if (buttonPressed(1)) {
-      Rsetpoint = (Rsetpoint==true) ? false : true;
-    }
+    // if (buttonPressed(1)) {
+    //   Rsetpoint = (Rsetpoint==true) ? false : true;
+    // }
+    
   }
 
   public Boolean buttonPressed(int i) {

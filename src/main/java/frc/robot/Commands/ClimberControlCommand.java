@@ -23,10 +23,10 @@ public class ClimberControlCommand extends Command {
   @Override
   public void execute() {
     if (joy.getRawButton(4)) {
-      climbSub.setSpeed(-0.15);
+      climbSub.setSpeed(-1);
       // System.out.println("Climber at negative speed");
     } else if (joy.getRawButton(5)) {
-      climbSub.setSpeed(0.15);
+      climbSub.setSpeed(01);
       // System.out.println("Climber at positive speed");
     } else {
       climbSub.setSpeed(0);

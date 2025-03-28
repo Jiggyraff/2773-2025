@@ -32,9 +32,9 @@ public class RobotContainer {
 
   // Base inits
             // Controllers
-            Joystick hotaz = new Joystick(0);
+            // Joystick hotaz = new Joystick(0);
             Joystick towerJoy = new Joystick(1);
-            XboxController xbox = new XboxController(2);
+            XboxController xbox = new XboxController(0);
           
             // Subsystems
             DriveSubsystem driveSub = new DriveSubsystem();
@@ -44,7 +44,7 @@ public class RobotContainer {
             ClimberSubsystem climbSub = new ClimberSubsystem();
             
             // Commands from files
-            HOTASDriveCommand HOTASDriveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
+            // HOTASDriveCommand HOTASDriveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
             XBOXDriveCommand xboxDriveCommand = new XBOXDriveCommand(driveSub, xbox, tagSub, odomSub);
             TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
             ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
@@ -57,8 +57,8 @@ public class RobotContainer {
               climbSub.setDefaultCommand(climberCommand);
               towerSub.setDefaultCommand(towerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
-              // Trigger t = new Trigger(() -> {return xbox.getRightStickButtonPressed();});
-              // t.onTrue(new MoveToTagCommand(0.1, driveSub, odomSub, tagSub));
+              Trigger t = new Trigger(() -> {return xbox.getRightTriggerAxis() > 0.85;});
+              t.onTrue(new MoveToTagCommand(0.1, driveSub, odomSub, tagSub));
             }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -66,17 +66,18 @@ public class RobotContainer {
   //Autonomous chooser
   public Command getAutonomousCommand(String autoChosen) {
     // switch (autoChosen){
-    //   case "Auto 1": return new PathPlannerAuto("Do A Flip");
-    //   case "Auto 2": return new DeltaPoseCommand(0.5, 0.5, Math.PI/4, driveSub, odomSub);
-    //   case "Auto 3": return new DeltaPoseCommand(1.5, 0.5, Math.PI/4, driveSub, odomSub);
+    //   case "Auto 1": return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
+    //     new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
+    //   case "Auto 2": return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
+    //   case "Auto 3": return new MoveToTagCommand(0.3, driveSub, odomSub, tagSub);
     //   case "Auto 4": return doATwirl;
     //   case "Auto 5": return doADance;
     //   case "Auto 6": return heightLadder;
     //   default: return null;
     // }
-    return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
-      new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
-
+    // return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
+    //   new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
+    return new MoveToTagCommand(0.2, driveSub, odomSub, tagSub);
     // return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
   }
   

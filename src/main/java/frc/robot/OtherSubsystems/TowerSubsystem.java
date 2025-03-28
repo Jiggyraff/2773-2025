@@ -67,7 +67,7 @@ public class TowerSubsystem extends SubsystemBase {
       // if (Math.abs(encoder.getPosition() - height) > errorMax) {
         speed = MathUtil.clamp(-0.0373 + 2 * Math.pow(height - encoder.getPosition(), 2) * Math.signum(height - encoder.getPosition()), -0.25, 0.25);
       
-        // } else {
+      //   } else {
       //   speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -0.25, 0.25);
       // }
 
@@ -104,19 +104,15 @@ public class TowerSubsystem extends SubsystemBase {
        -coralRotateSpeed,
        coralRotateSpeed);
       runCoralRotateMotors(rotationSpeed);
-      // System.out.println(encoder.getPosition());
-      System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
-      // System.out.println("Error: " + pid.getError());
-      // System.out.println("Speed: " + speed);
 
-      // System.out.println("Coral Encoder: " + coralEncoder.getPosition() +
-      // "; Rotation: " + r + "; Speed: " + rotationSpeed + "; Error: " + coralPid.getAccumulatedError());
+      // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
+      // height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
+
       oldHeight = height;
   }
 
   public void setHeight(double d) {
-    height = MathUtil.clamp(d, -12.0, 0);
+    height = MathUtil.clamp(d, -19, 0);
   }
 
   public void setDifferenceHeight(double d) {

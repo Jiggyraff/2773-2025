@@ -51,7 +51,7 @@ public class TagSubsystem extends SubsystemBase {
     TagData lastTag;
     public final double[][] aprilTagPositions = 
         //   ID    X       Y       Z    Zrot Yrot   >>>>   explained below          
-           {//{1, 1,  2,  43, 0, 0},
+           {{0, 0,       0,      0,     0,   0},
             {1, 657.37,  25.80,  58.50, 126, 0},
             {2, 657.37,  291.20, 58.50, 234, 0},
             {3, 455.15,  317.15, 51.25, 270, 0},
@@ -150,7 +150,7 @@ public class TagSubsystem extends SubsystemBase {
                 // System.out.println(data);
                 if (data != null) {
                     lastTag = data;
-                    System.out.println("Sees Tag");
+                    // System.out.println("Sees Tag");
                     seesTag = true;
                     // System.out.println("Tag: " + data.aprilTagID + " " + data.x + " " + data.y + " " + data.z);
                     deadTimer = 0;
@@ -158,6 +158,7 @@ public class TagSubsystem extends SubsystemBase {
                 buffer.clear();
 
             } else {
+                // System.out.println(deadTimer);
                 deadTimer++;
                 buffer.clear();
             } 
@@ -190,7 +191,7 @@ public class TagSubsystem extends SubsystemBase {
 
     public TagData parseTagData(String s) {
         /*TAG: 4; 0.92... 123 123 123 123 123 123 123 123;123 123 123; 123 */
-        System.out.println(s);
+        // System.out.println(s);
         String[] tokens = s.split("; ");  
         String[] ids = tokens[0].split(": ");
         if (!ids[0].equals("TAG_FOUND") || tokens.length < 4) {
@@ -201,7 +202,7 @@ public class TagSubsystem extends SubsystemBase {
         String TagMatrix = tokens[1];
 
         String apriltag = ids[1];
-        double[] tagInfo = aprilTagPositions[Integer.parseInt(apriltag)-1];
+        double[] tagInfo = aprilTagPositions[Integer.parseInt(apriltag)];
 
         double yRot = (-tagInfo[4] + 0) / 180.0 * Math.PI;
         Matrix<N4,N4> tagMatrix = Matrix.eye(Nat.N4());

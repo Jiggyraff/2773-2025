@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
+import frc.robot.Autonomous.CenterOnTagCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
 import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.MoveToTagCommand;
@@ -58,9 +59,13 @@ public class RobotContainer {
               towerSub.setDefaultCommand(towerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
               Trigger lT = new Trigger(() -> {return xbox.getLeftTriggerAxis() > 0.85;});
-              lT.onTrue(new MoveToTagCommand(0.3, 0, driveSub, odomSub, tagSub, xbox));
               Trigger rT = new Trigger(() -> {return xbox.getRightTriggerAxis() > 0.85;});
+              Trigger lB = new Trigger(() -> {return xbox.getLeftBumperButtonPressed();});
+              Trigger rB = new Trigger(() -> {return xbox.getRightBumperButtonPressed();});
+              lT.onTrue(new MoveToTagCommand(0.3, 0, driveSub, odomSub, tagSub, xbox));
               rT.onTrue(new MoveToTagCommand(0.3, -0.32, driveSub, odomSub, tagSub, xbox));
+              lB.onTrue(new CenterOnTagCommand(0.16, driveSub, odomSub, tagSub, xbox));
+              rB.onTrue(new CenterOnTagCommand(-0.16, driveSub, odomSub, tagSub, xbox));
             }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);

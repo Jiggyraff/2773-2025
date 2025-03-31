@@ -54,39 +54,50 @@ public class XBOXDriveCommand extends Command {
   @Override
   public void execute() {
     buttonMicroCommands();
-    double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRightX();
-    double rawAngle = Math.atan2(YAxis, XAxis);
     double gyroAngle = odomSub.getGyroAngle();
     double elevatorBias = 0.5 + MathUtil.clamp(0.5 - (Math.abs(towerSub.getElevatorPosition()) / 40), 0, 0.5);
-
-    if (xbox.getPOV() == 0) {
-      sensitivity = MathUtil.clamp(0.05 + sensitivity, 0, 1);
-    } else if (xbox.getPOV() == 180) {
-      sensitivity = MathUtil.clamp(-0.05 + sensitivity, 0, 1);
+    
+    if (xbox.getRawButton(1)) {
+      sensitivity = 0.25;
+    } else if (xbox.getRawButton(0)) {
+      sensitivity = 2;
     }
-    double setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
-    double rotSpeed;
-    if (!Rsetpoint) {
-      rotSpeed = (MathUtil.applyDeadband(RAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
-    } else {
-      rotSpeed = rotateAroundPoint(rx, ry);
-    }
-    // System.out.println("Axis: " + RAxis + " Speed: " + rotSpeed);
-          
-    pid.setSetpoint(setDistance);
-    double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
-    driveSpeed *= elevatorBias;
 
-    if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone) {
-      driveSubsystem.stop();
+    if (xbox.getPOV() == 0) {             //Top
+      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, Math.PI/2 - gyroAngle);
+    } else if (xbox.getPOV() == 90) {     //Idk
+      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, Math.PI - gyroAngle);
+    } else if (xbox.getPOV() == 180) {    //Bottom
+      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, -Math.PI/2 - gyroAngle);
+    } else if (xbox.getPOV() == 270) {    //Idk
+      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, 0 - gyroAngle);
     } else {
-      if (Math.abs(RAxis) > 0) {
-        odomSub.getGyroAngle();
+      double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRightX();
+      double rawAngle = Math.atan2(YAxis, XAxis);
+      double setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
+      double rotSpeed;
+      if (!Rsetpoint) {
+        rotSpeed = (MathUtil.applyDeadband(RAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+      } else {
+        rotSpeed = rotateAroundPoint(rx, ry);
       }
-      driveSubsystem.directionalDrive(driveSpeed, rawAngle - gyroAngle, rotSpeed);
+      // System.out.println("Axis: " + RAxis + " Speed: " + rotSpeed);
+
+      pid.setSetpoint(setDistance);
+      double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
+      driveSpeed *= elevatorBias;
+
+      if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone) {
+        driveSubsystem.stop();
+      } else {
+        if (Math.abs(RAxis) > 0) {
+          odomSub.getGyroAngle();
+        }
+        driveSubsystem.directionalDrive(driveSpeed, rawAngle - gyroAngle, rotSpeed);
+      }
+      oldT = driveSubsystem.averageDistanceEncoder();
+      oldG = odomSub.getGyroAngle();
     }
-    oldT = driveSubsystem.averageDistanceEncoder();
-    oldG = odomSub.getGyroAngle();
   }
 
   public void buttonMicroCommands() {

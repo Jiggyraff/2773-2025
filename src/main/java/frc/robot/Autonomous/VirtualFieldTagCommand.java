@@ -35,8 +35,8 @@ public class VirtualFieldTagCommand extends Command {
   @Override
   public void execute() {
     if (c == 2) {
-      System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
-      if (!tagSub.getSeestag()) {
+      System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeesTag());
+      if (!tagSub.getSeesTag()) {
         tagSub.setRelativeAngle(tagSub.getNearestTag()[1] - Math.PI/2 + tagSub.getGyroAngle());
       } else {
         double speed = MathUtil.clamp(motorPID.calculate(-tagSub.getXCom()), -0.05, 0.05);

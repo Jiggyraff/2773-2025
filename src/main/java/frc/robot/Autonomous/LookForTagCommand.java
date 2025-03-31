@@ -36,7 +36,7 @@ public class LookForTagCommand extends Command {
   public void execute() {
     if (c == 2) {
       // System.out.println("XCom: " + tagSub.getXCom() + "Sees Tag: " + tagSub.getSeestag());
-      if (!tagSub.getSeestag()) {
+      if (!tagSub.getSeesTag()) {
         tagSub.setPositionDifference(0.05);
         // System.out.println(tagSub.getSeestag());
       } else {

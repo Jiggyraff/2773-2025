@@ -278,7 +278,7 @@ public class TagSubsystem extends SubsystemBase {
         }
     }
 
-    public Boolean getSeestag() {
+    public Boolean getSeesTag() {
         return seesTag;
     }
 

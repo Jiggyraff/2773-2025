@@ -45,7 +45,7 @@ public class RobotContainer {
             
             // Commands from files
             // HOTASDriveCommand HOTASDriveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
-            XBOXDriveCommand xboxDriveCommand = new XBOXDriveCommand(driveSub, xbox, tagSub, odomSub);
+            XBOXDriveCommand xboxDriveCommand = new XBOXDriveCommand(driveSub, xbox, tagSub, odomSub, towerSub);
             TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
             ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
             LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
@@ -57,8 +57,10 @@ public class RobotContainer {
               climbSub.setDefaultCommand(climberCommand);
               towerSub.setDefaultCommand(towerCommand);
               tagSub.setDefaultCommand(lookForTagCommand);
-              Trigger t = new Trigger(() -> {return xbox.getRightTriggerAxis() > 0.85;});
-              t.onTrue(new MoveToTagCommand(0.1, driveSub, odomSub, tagSub));
+              Trigger lT = new Trigger(() -> {return xbox.getLeftTriggerAxis() > 0.85;});
+              lT.onTrue(new MoveToTagCommand(0.3, 0, driveSub, odomSub, tagSub, xbox));
+              Trigger rT = new Trigger(() -> {return xbox.getRightTriggerAxis() > 0.85;});
+              rT.onTrue(new MoveToTagCommand(0.3, -0.32, driveSub, odomSub, tagSub, xbox));
             }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
@@ -77,8 +79,8 @@ public class RobotContainer {
     // }
     // return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
     //   new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
-    return new MoveToTagCommand(0.2, driveSub, odomSub, tagSub);
-    // return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
+    // return new MoveToTagCommand(0.2, 0.32, driveSub, odomSub, tagSub);
+    return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
   }
   
   

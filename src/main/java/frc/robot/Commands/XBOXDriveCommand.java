@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Information.*;
+import frc.robot.OtherSubsystems.TowerSubsystem;
 import frc.robot.Constants;
 
 public class XBOXDriveCommand extends Command {
@@ -18,6 +19,8 @@ public class XBOXDriveCommand extends Command {
   private final XboxController xbox;
   private final TagSubsystem tagSub;
   private final OdometrySubsystem odomSub;
+  private final TowerSubsystem towerSub;
+
   private PIDController pid;
   private PIDController rotPID;
   double sensitivity = 0.5;
@@ -28,12 +31,13 @@ public class XBOXDriveCommand extends Command {
   private double ry = 0.5;
 
   /** Creates a new DriveCommand. */
-  public XBOXDriveCommand(DriveSubsystem driveSub, XboxController xbox, TagSubsystem tagSub, OdometrySubsystem odomSub) {
+  public XBOXDriveCommand(DriveSubsystem driveSub, XboxController xbox, TagSubsystem tagSub, OdometrySubsystem odomSub, TowerSubsystem towerSub) {
     this.driveSubsystem = driveSub;
     this.xbox = xbox;
     this.tagSub = tagSub;
     this.odomSub = odomSub;
     this.pid = driveSub.getPID();
+    this.towerSub = towerSub;
     addRequirements(driveSub);
   }
   
@@ -53,6 +57,8 @@ public class XBOXDriveCommand extends Command {
     double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRightX();
     double rawAngle = Math.atan2(YAxis, XAxis);
     double gyroAngle = odomSub.getGyroAngle();
+    double elevatorBias = 0.5 + MathUtil.clamp(0.5 - (Math.abs(towerSub.getElevatorPosition()) / 40), 0, 0.5);
+
     if (xbox.getPOV() == 0) {
       sensitivity = MathUtil.clamp(0.05 + sensitivity, 0, 1);
     } else if (xbox.getPOV() == 180) {
@@ -69,7 +75,7 @@ public class XBOXDriveCommand extends Command {
           
     pid.setSetpoint(setDistance);
     double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
-
+    driveSpeed *= elevatorBias;
 
     if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone) {
       driveSubsystem.stop();

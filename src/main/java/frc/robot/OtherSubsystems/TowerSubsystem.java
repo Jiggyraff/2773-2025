@@ -66,7 +66,9 @@ public class TowerSubsystem extends SubsystemBase {
       // double errorMax = 0.1;
       // if (Math.abs(encoder.getPosition() - height) > errorMax) {
         speed = MathUtil.clamp(-0.0373 + 2 * Math.pow(height - encoder.getPosition(), 2) * Math.signum(height - encoder.getPosition()), -0.25, 0.25);
-      
+      if (height > -0.1 && encoder.getPosition() > -0.1) {
+        speed = 0;
+      }
       //   } else {
       //   speed = MathUtil.clamp(pid.calculate(encoder.getPosition()), -0.25, 0.25);
       // }
@@ -105,8 +107,8 @@ public class TowerSubsystem extends SubsystemBase {
        coralRotateSpeed);
       runCoralRotateMotors(rotationSpeed);
 
-      // System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
-      // height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
+      System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
+      height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
 
       oldHeight = height;
   }
@@ -163,5 +165,13 @@ public class TowerSubsystem extends SubsystemBase {
   
   public void percentageHeight(double d) {
     setHeight(-19 + (d * 19));
+  }
+
+  public double getElevatorPosition() {
+    return encoder.getPosition();
+  }
+
+  public void resetCoralRotateEncoders() {
+    coralEncoder.setPosition(0);
   }
 }

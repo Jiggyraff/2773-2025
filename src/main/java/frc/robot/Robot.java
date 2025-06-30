@@ -32,8 +32,8 @@ public class Robot extends TimedRobot {
   public Robot() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_chooser.setDefaultOption("Move + Lift", "Auto 1");
-    m_chooser.addOption("Move", "Auto 2");
+    m_chooser.setDefaultOption("Drop Lift, Move Forward 180", "Auto 1");
+    m_chooser.addOption("Center Coral L3", "Auto 2");
     m_chooser.addOption("Tag Center", "Auto 3");
     m_chooser.addOption("Twirl", "Auto 4");
     m_chooser.addOption("Dance", "Auto 5");

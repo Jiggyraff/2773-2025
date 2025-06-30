@@ -29,6 +29,9 @@ public class XBOXDriveCommand extends Command {
   private boolean Rsetpoint = false;
   private double rx = 0;
   private double ry = 0.5;
+  private double setX = 0;
+  private double setY = 0;
+  private boolean teleop = true;
 
   /** Creates a new DriveCommand. */
   public XBOXDriveCommand(DriveSubsystem driveSub, XboxController xbox, TagSubsystem tagSub, OdometrySubsystem odomSub, TowerSubsystem towerSub) {
@@ -51,54 +54,91 @@ public class XBOXDriveCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   double oldT = 0.0;
   double oldG = 0.0;
+  boolean mode = true;
   @Override
   public void execute() {
+    if (Math.abs(xbox.getLeftY()) > Constants.ControllerDeadzone) {
+      teleop = true;
+    }
     buttonMicroCommands();
     double gyroAngle = odomSub.getGyroAngle();
     double elevatorBias = 0.5 + MathUtil.clamp(0.5 - (Math.abs(towerSub.getElevatorPosition()) / 40), 0, 0.5);
     
     if (xbox.getRawButton(1)) {
       sensitivity = 0.25;
-    } else if (xbox.getRawButton(0)) {
+    } else if (xbox.getRawButton(2)) {
       sensitivity = 2;
-    }
-
-    if (xbox.getPOV() == 0) {             //Top
-      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, Math.PI/2 - gyroAngle);
-    } else if (xbox.getPOV() == 90) {     //Idk
-      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, Math.PI - gyroAngle);
-    } else if (xbox.getPOV() == 180) {    //Bottom
-      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, -Math.PI/2 - gyroAngle);
-    } else if (xbox.getPOV() == 270) {    //Idk
-      driveSubsystem.directionalDrive(0.2 * sensitivity * elevatorBias, 0 - gyroAngle);
     } else {
-      double XAxis = xbox.getLeftX(), YAxis = xbox.getLeftY(), RAxis = xbox.getRightX();
-      double rawAngle = Math.atan2(YAxis, XAxis);
-      double setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
-      double rotSpeed;
-      if (!Rsetpoint) {
-        rotSpeed = (MathUtil.applyDeadband(RAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+      sensitivity = 1;
+    }
+    double XAxis = 0;
+    double YAxis = 0;
+    double RAxis = 0;
+    double driveAngle = 0;
+    double driveSpeed = 0;
+    double setDistance = 0;
+    if (teleop) {
+      if (xbox.getPOV() == 180) {             //Top
+        driveAngle = Math.PI/2;
+        driveSpeed = 0.05 * sensitivity;
+      } else if (xbox.getPOV() == 270) {     //Idk
+        driveAngle = Math.PI;
+        driveSpeed = 0.05 * sensitivity;
+      } else if (xbox.getPOV() == 0) {    //Bottom
+        driveAngle = -Math.PI/2;
+        driveSpeed = 0.05 * sensitivity;
+      } else if (xbox.getPOV() == 90) {    //Idk
+        driveAngle = 0;
+        driveSpeed = 0.05 * sensitivity;
       } else {
-        rotSpeed = rotateAroundPoint(rx, ry);
+        XAxis = xbox.getLeftX();
+        YAxis = xbox.getLeftY();
+        RAxis = xbox.getRightX();
+        driveAngle = Math.atan2(YAxis, XAxis) - gyroAngle;
+        setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
+        pid.setSetpoint(setDistance);
+        driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
+        driveSpeed *= elevatorBias;
       }
+    } else {
+      XAxis = setX;
+      YAxis = setY;
+      driveAngle = Math.atan2(YAxis, XAxis) - gyroAngle;
+      setDistance = MathUtil.clamp(Math.sqrt(XAxis * XAxis + YAxis * YAxis)*2, 0,2);
+      pid.setSetpoint(setDistance);
+      driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
+      driveSpeed *= elevatorBias;
+    }
+    // System.out.println("Speed: " + driveSpeed + " Angle: " + driveAngle);
+
+  double rotSpeed;
+  if (!Rsetpoint) {
+    rotSpeed = (MathUtil.applyDeadband(RAxis, Constants.ControllerDeadzone)) * sensitivity * Constants.MaxRotationSpeed;
+  } else {
+    rotSpeed = rotateAroundPoint(rx, ry);
+  }
+  
+  mode = (xbox.getLeftStickButtonPressed()) ? true : false;
+  if (mode) {
+    rotSpeed *= 1;
+  } else {
+    rotSpeed *= 0.5;
+  }
       // System.out.println("Axis: " + RAxis + " Speed: " + rotSpeed);
 
-      pid.setSetpoint(setDistance);
-      double driveSpeed = pid.calculate((driveSubsystem.averageDistanceEncoder()-oldT)*11.24) * Constants.MaxDriveSpeed * sensitivity;
-      driveSpeed *= elevatorBias;
 
-      if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone) {
+      if (Math.abs(XAxis) < Constants.ControllerDeadzone && Math.abs(YAxis) < Constants.ControllerDeadzone && Math.abs(RAxis) < Constants.ControllerDeadzone && xbox.getPOV() != 0 && xbox.getPOV() != 90 && xbox.getPOV() != 270 && xbox.getPOV() != 180) {
         driveSubsystem.stop();
       } else {
         if (Math.abs(RAxis) > 0) {
           odomSub.getGyroAngle();
         }
-        driveSubsystem.directionalDrive(driveSpeed, rawAngle - gyroAngle, rotSpeed);
+        driveSubsystem.directionalDrive(driveSpeed, driveAngle, rotSpeed);
       }
       oldT = driveSubsystem.averageDistanceEncoder();
       oldG = odomSub.getGyroAngle();
     }
-  }
+  
 
   public void buttonMicroCommands() {
     if (buttonPressed(7) && buttonOnPress(8)) {
@@ -136,5 +176,11 @@ public class XBOXDriveCommand extends Command {
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  public void setXYSpeed(double x, double y) {
+    teleop = false;
+    setX = x;
+    setY = y;
   }
 }

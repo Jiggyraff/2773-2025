@@ -28,6 +28,8 @@ public class TowerSubsystem extends SubsystemBase {
   private final double algaeSpeed = 0.2;
   private final double coralRotateSpeed = 0.2;
   private final double coralSpeed = 0.1;
+
+  boolean preset = true;
   
   
   PIDController pid = new PIDController(0.1, 0.001, 0.001);
@@ -51,6 +53,7 @@ public class TowerSubsystem extends SubsystemBase {
     Shuffleboard.getTab("Tower").addDouble("Height", () -> {return height;});
     Shuffleboard.getTab("Tower").addDouble("Speed", () -> {return speed;});
     Shuffleboard.getTab("Tower").addDouble("Integral Error", () -> {return pid.getAccumulatedError();});
+    runCoralMotors(-1);
   }
 
   // IMPORTANT: the elevator's range is from 0 to 20, with 0 being the top
@@ -105,7 +108,9 @@ public class TowerSubsystem extends SubsystemBase {
       double rotationSpeed = -MathUtil.clamp(coralPid.calculate(coralEncoder.getPosition()),
        -coralRotateSpeed,
        coralRotateSpeed);
+       if (preset) {
       runCoralRotateMotors(rotationSpeed);
+       }
 
       System.out.println("Encoder: " + encoder.getPosition() + "; Height: " +
       height + " REncoder: " + coralEncoder.getPosition() + " Rotation: " + r);
@@ -122,11 +127,11 @@ public class TowerSubsystem extends SubsystemBase {
   }
   
   public void setRotation(double d) {
-    r = MathUtil.clamp(d, 0, 100);
+    r = MathUtil.clamp(d, 12.9, 100);
   }
   
   public void setDifferenceRotation(double d) {
-    System.out.println("########### " + d);
+    // System.out.println("########### " + d);
     setRotation(r + d);
   }
   
@@ -173,5 +178,13 @@ public class TowerSubsystem extends SubsystemBase {
 
   public void resetCoralRotateEncoders() {
     coralEncoder.setPosition(0);
+  }
+
+  public void togglePreset() {
+    if (preset) {
+      preset = false;
+    } else {
+      preset = true;
+    }
   }
 }

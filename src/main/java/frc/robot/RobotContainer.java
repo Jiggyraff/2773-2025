@@ -10,16 +10,20 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.SwerveSubsystems.*;
 import frc.robot.Autonomous.ApproachTagCommand;
 import frc.robot.Autonomous.CenterOnTagCommand;
+import frc.robot.Autonomous.CoralSpeedCommand;
 import frc.robot.Autonomous.DeltaPoseCommand;
+import frc.robot.Autonomous.EncoderBasedElevatorCommand;
 import frc.robot.Autonomous.LookForTagCommand;
 import frc.robot.Autonomous.MoveToTagCommand;
 import frc.robot.Autonomous.PullClimber;
+import frc.robot.Autonomous.RotateCoralCommand;
 import frc.robot.Autonomous.HeightBasedElevatorCommand;
 import frc.robot.Commands.*;
 import frc.robot.Information.*;
@@ -47,7 +51,7 @@ public class RobotContainer {
             // Commands from files
             // HOTASDriveCommand HOTASDriveCommand = new HOTASDriveCommand(driveSub, hotaz, tagSub, odomSub);
             XBOXDriveCommand xboxDriveCommand = new XBOXDriveCommand(driveSub, xbox, tagSub, odomSub, towerSub);
-            TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy);
+            TowerControlCommand towerCommand = new TowerControlCommand(towerSub, xbox, towerJoy, xboxDriveCommand);
             ClimberControlCommand climberCommand = new ClimberControlCommand(climbSub, towerJoy);
             LookForTagCommand lookForTagCommand = new LookForTagCommand(tagSub);
             HeightBasedElevatorCommand moveToMaxHeight = new HeightBasedElevatorCommand(1, towerSub);
@@ -62,30 +66,51 @@ public class RobotContainer {
               Trigger rT = new Trigger(() -> {return xbox.getRightTriggerAxis() > 0.85;});
               Trigger lB = new Trigger(() -> {return xbox.getLeftBumperButtonPressed();});
               Trigger rB = new Trigger(() -> {return xbox.getRightBumperButtonPressed();});
-              lT.onTrue(new MoveToTagCommand(0.3, 0, driveSub, odomSub, tagSub, xbox));
-              rT.onTrue(new MoveToTagCommand(0.3, -0.32, driveSub, odomSub, tagSub, xbox));
+              // Trigger b8 = new Trigger(() -> {return towerJoy.getRawButtonPressed(8);});
+              lT.onTrue(new MoveToTagCommand(0.3, 0.16, driveSub, odomSub, tagSub, xbox));
+              rT.onTrue(new MoveToTagCommand(0.3, -0.16, driveSub, odomSub, tagSub, xbox));
               lB.onTrue(new CenterOnTagCommand(0.16, driveSub, odomSub, tagSub, xbox));
               rB.onTrue(new CenterOnTagCommand(-0.16, driveSub, odomSub, tagSub, xbox));
+              // b8.onTrue(climberCommand);
             }
 
   ApproachTagCommand tagCommand = new ApproachTagCommand(tagSub, driveSub);
 
   //Autonomous chooser
   public Command getAutonomousCommand(String autoChosen) {
-    // switch (autoChosen){
-    //   case "Auto 1": return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
-    //     new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
-    //   case "Auto 2": return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
-    //   case "Auto 3": return new MoveToTagCommand(0.3, driveSub, odomSub, tagSub);
-    //   case "Auto 4": return doATwirl;
-    //   case "Auto 5": return doADance;
-    //   case "Auto 6": return heightLadder;
-    //   default: return null;
-    // }
-    // return new ParallelCommandGroup(new PullClimber(climbSub, 0.05), new WaitCommand(5)).andThen(
-    //   new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub));
+    switch (autoChosen){
+      case "Auto 1": return 
+        new ParallelCommandGroup(
+          new PullClimber(climbSub, 0.25),
+          new WaitCommand(5)
+        ).andThen(new ParallelCommandGroup(
+          new DeltaPoseCommand(0, 1.5, Math.PI, driveSub, odomSub),
+          new PullClimber(climbSub, 0)
+        ));
+      case "Auto 2": return 
+        new ParallelCommandGroup(
+          new CoralSpeedCommand(towerSub, -1),
+          new PullClimber(climbSub, 0.25),
+          new EncoderBasedElevatorCommand(-8.3, towerSub),
+          new RotateCoralCommand(56.78, towerSub),
+          new WaitCommand(5)
+        ).andThen(
+        new ParallelRaceGroup(
+          new DeltaPoseCommand(0, 2, 0, driveSub, odomSub)),
+          new WaitCommand(5)
+        ).andThen(
+          new CoralSpeedCommand(towerSub, 1)
+        );
+      case "Auto 3": return null;
+      case "Auto 4": return doATwirl;
+      case "Auto 5": return doADance;
+      case "Auto 6": return heightLadder;
+      default: return null;
+    }
+    // return new ParallelCommandGroup(new PullClimber(climbSub, 0.25), new WaitCommand(5)).andThen(
+    //   new DeltaPoseCommand(0, 1.5, Math.PI, driveSub, odomSub));
     // return new MoveToTagCommand(0.2, 0.32, driveSub, odomSub, tagSub);
-    return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
+    // return new DeltaPoseCommand(0, 1.5, 0, driveSub, odomSub);
   }
   
   

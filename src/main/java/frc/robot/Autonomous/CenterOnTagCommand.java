@@ -87,7 +87,7 @@ public class CenterOnTagCommand extends Command {
       speed = MathUtil.clamp(tinyPID.calculate(x, 2),-Constants.MaxDriveSpeed,Constants.MaxDriveSpeed);
     }
 
-    driveSub.directionalDrive(-speed, radians, rspeed);
+    driveSub.directionalDrive(speed, radians, rspeed);
   }
   
 

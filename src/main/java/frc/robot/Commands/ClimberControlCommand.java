@@ -1,5 +1,6 @@
 package frc.robot.Commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,15 +23,10 @@ public class ClimberControlCommand extends Command {
 
   @Override
   public void execute() {
-    if (joy.getRawButton(4)) {
-      climbSub.setSpeed(-1);
-      // System.out.println("Climber at negative speed");
-    } else if (joy.getRawButton(5)) {
-      climbSub.setSpeed(01);
-      // System.out.println("Climber at positive speed");
-    } else {
-      climbSub.setSpeed(0);
-    }
+   
+
+    double speed = Math.signum(MathUtil.applyDeadband(joy.getZ(), 0.5));
+    climbSub.setSpeed(speed);
 
     
     climbSub.setServo(joy.getZ());

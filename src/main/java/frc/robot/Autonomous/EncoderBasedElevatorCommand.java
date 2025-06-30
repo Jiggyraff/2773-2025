@@ -15,7 +15,7 @@ public class EncoderBasedElevatorCommand extends InstantCommand {
   double h;
 
   public EncoderBasedElevatorCommand(double h, TowerSubsystem towerSub) {
-    addRequirements(towerSub);
+    // addRequirements(towerSub);
     this.towerSub = towerSub;
     this.h = h;
   }
@@ -26,6 +26,6 @@ public class EncoderBasedElevatorCommand extends InstantCommand {
     towerSub.setHeight(h);
   }
   public boolean isFinished() {
-    return towerSub.elevatorAtSetpoint();
+    return true;
   }
 }

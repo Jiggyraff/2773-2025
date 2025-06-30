@@ -4,32 +4,26 @@
 
 package frc.robot.Autonomous;
 
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.OtherSubsystems.ClimberSubsystem;
+import frc.robot.OtherSubsystems.TowerSubsystem;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class PullClimber extends Command {
-
-  ClimberSubsystem climbSub;
-  double s;
-
-  public PullClimber(ClimberSubsystem climbSub, double s) {
-    addRequirements(climbSub);
-    this.climbSub = climbSub;
-    this.s = s;
+public class RotateCoralCommand extends InstantCommand {
+  TowerSubsystem towerSub;
+  double d;
+  public RotateCoralCommand(double d, TowerSubsystem towerSub) {
+    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(towerSub);
+    this.towerSub = towerSub;
+    this.d = d;
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    climbSub.setSpeed(s);
-  }
-
-  @Override
-  public boolean isFinished() {
-    return true;
+    System.out.println(d);
+    towerSub.setRotation(d);
   }
 }

@@ -14,20 +14,22 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Autonomous.MoveToTagCommand;
 import frc.robot.OtherSubsystems.TowerSubsystem;
+import frc.robot.SwerveSubsystems.DriveSubsystem;
 
 public class TowerControlCommand extends Command {
   TowerSubsystem towerSub;
+  XBOXDriveCommand driveCommand;
   Joystick joy;
   
   private XboxController xbox;
   boolean simple;
 
   /** Creates a new TowerControlCommand. */
-  public TowerControlCommand(TowerSubsystem towerSub, XboxController xbox, Joystick joy) {
+  public TowerControlCommand(TowerSubsystem towerSub, XboxController xbox, Joystick joy, XBOXDriveCommand driveCommand) {
     addRequirements(towerSub);
     this.towerSub = towerSub;
     this.joy = joy;
-    
+    this.driveCommand = driveCommand;
     this.xbox = xbox;
   }
 
@@ -53,7 +55,7 @@ public class TowerControlCommand extends Command {
     //Switch to simple mode, experimental
     if (joy.getRawButtonPressed(5)) {
       simple=true ? (simple = false) : (simple = true);
-      System.out.println("Simple: " + simple);
+      // System.out.println("Simple: " + simple);
     }
 
     //Moving coral aimer HOTAS
@@ -64,8 +66,11 @@ public class TowerControlCommand extends Command {
       towerSub.setDifferenceRotation(0.3);
       // towerSub.runCoralRotateMotors(0.5);
     } else {
+      towerSub.setDifferenceRotation(0);
       // towerSub.runCoralRotateMotors(0);
     }
+
+    // towerSub.runCoralMotors(2 * (joy.getThrottle() - 0.5));
 
     //Spitting/Sucking coral HOTAS
     if (joy.getRawButton(11)) {           //Spit
@@ -82,10 +87,10 @@ public class TowerControlCommand extends Command {
     //Presets
     if (joy.getRawButtonPressed(3)) {           //L4
       towerSub.setHeight(-20);
-      towerSub.setRotation(52.02);
+      towerSub.setRotation(50.3);
     } else if (joy.getRawButtonPressed(2)) {    //L3
       towerSub.setRotation(56.78);
-      towerSub.setHeight(-7.33);
+      towerSub.setHeight(-8.3);
     } else if (joy.getRawButtonPressed(8)) {    //L2
       towerSub.setHeight(-0.85);
       towerSub.setRotation(56.69);
@@ -95,12 +100,31 @@ public class TowerControlCommand extends Command {
       towerSub.runCoralMotors(-1);
     }
 
+    if (joy.getRawButtonPressed(4)) {
+      towerSub.setHeight(-3.54);
+      towerSub.setRotation(70.28);
+      towerSub.runCoralMotors(1);
+    }
+    if (joy.getRawButtonPressed(5)) {
+      towerSub.setHeight(-9.65);
+      towerSub.setRotation(70.28);
+      towerSub.runCoralMotors(1);
+    }
+
+    // if (joy.getRawButtonPressed(8)) {
+    //   towerSub.setDifferenceRotation(-60);
+    //   towerSub.runCoralMotors(1);
+    //   driveCommand.setXYSpeed(0, -0.2);
+    // }
+
     //Encoder restter
-    if (joy.getRawButton(9)) {
+    if (joy.getRawButtonPressed(9)) {
       towerSub.runCoralRotateMotors(0.3);
+      towerSub.togglePreset();
     }
     if (joy.getRawButtonReleased(9)) {
       towerSub.resetCoralRotateEncoders();
+      towerSub.togglePreset();
     }
 
     //#######      #######
